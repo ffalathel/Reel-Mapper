@@ -1,0 +1,49 @@
+name: Reel Mapper
+options:
+  bundleIdPrefix: com.reelmapper
+  deploymentTarget:
+    iOS: 16.0
+  xcodeVersion: 14.0
+  groupSortPosition: top
+targets:
+  Reel Mapper:
+    type: application
+    platform: iOS
+    sources:
+      - path: Reel Mapper
+        excludes:
+          - "**/*.DS_Store"
+      # FORCE INCLUDE
+      - path: Reel Mapper/Managers
+      - path: ReelMapper.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.reelmapper.app
+        INFOPLIST_FILE: Reel Mapper/Info.plist
+        CODE_SIGN_ENTITLEMENTS: ReelMapper.entitlements
+        DEVELOPMENT_TEAM: ""
+        CODE_SIGN_STYLE: Automatic
+        CURRENT_PROJECT_VERSION: 1
+        MARKETING_VERSION: 1.0
+        ENABLE_PREVIEWS: YES
+    dependencies:
+      - target: ShareExtension
+
+  ShareExtension:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: ShareExtension
+      - path: ShareExtension.entitlements
+      # Shared Code
+      - path: Reel Mapper/Models
+      - path: Reel Mapper/Networking
+      - path: Reel Mapper/Managers
+
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.reelmapper.app.ShareExtension
+        INFOPLIST_FILE: ShareExtension/Info.plist
+        CODE_SIGN_ENTITLEMENTS: ShareExtension.entitlements
+        CODE_SIGN_STYLE: Automatic
+        SKIP_INSTALL: NO
