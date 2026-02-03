@@ -22,7 +22,6 @@
     <dict>
         <key>NSExtensionAttributes</key>
         <dict>
-        <dict>
             <key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
             <integer>1</integer>
         </dict>

@@ -11,8 +11,8 @@ class HomeViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     
-    // Toggle this to see mock data
-    private let useMockData = true
+    // Toggle this to see mock data (set to false for live backend)
+    private let useMockData = false
     
     private var pollingTask: Task<Void, Never>?
     

@@ -2,11 +2,11 @@ import Foundation
 
 struct APIConfig {
     // Toggle this to false when AWS backend is ready
-    static let useMockMode = true
+    static let useMockMode = false  // ← LIVE MODE ENABLED
     
     // URL Configuration
     static let localURL = "http://localhost:8000"
-    static let productionURL = "https://your-aws-server.com"  // TODO: Update when AWS is ready
+    static let productionURL = "http://18.119.1.225:8000"  // AWS EC2 Backend
     
     // Use local URL for development, production URL when deployed
     static var baseURL: String {

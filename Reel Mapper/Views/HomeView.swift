@@ -141,11 +141,7 @@ struct HomeView: View {
                 }
             }
             .task {
-                // Simulate login for development
-                if AuthManager.shared.getToken() == nil {
-                    AuthManager.shared.simulateLogin()
-                }
-                
+                // Only fetch if user is authenticated
                 await viewModel.fetchHome()
                 viewModel.startPolling()
             }
@@ -270,10 +266,10 @@ struct AccountView: View {
                     }
                     
                     VStack(spacing: 4) {
-                        Text("John Doe")
+                        Text("Welcome")
                             .font(.system(size: 24, weight: .bold))
                         
-                        Text("john.doe@example.com")
+                        Text("Sign in to get started")
                             .font(.system(size: 15))
                             .foregroundColor(.secondary)
                     }
@@ -432,8 +428,8 @@ struct AccountMenuItem: View {
 
 struct EditProfileView: View {
     @Environment(\.dismiss) var dismiss
-    @State private var name = "John Doe"
-    @State private var email = "john.doe@example.com"
+    @State private var name = ""
+    @State private var email = ""
     @State private var bio = ""
     
     var body: some View {
@@ -632,7 +628,7 @@ struct SettingsView: View {
     @State private var emailNotifications = false
     @State private var pushNotifications = true
     @State private var locationServices = true
-    @State private var darkModeEnabled = false
+    @AppStorage("darkModeEnabled") private var darkModeEnabled = false
     
     var body: some View {
         Form {
@@ -662,10 +658,6 @@ struct SettingsView: View {
             // Appearance
             Section("Appearance") {
                 Toggle("Dark Mode", isOn: $darkModeEnabled)
-                
-                NavigationLink(destination: Text("Theme Settings")) {
-                    Label("Theme", systemImage: "paintbrush.fill")
-                }
             }
             
             // Data & Storage
