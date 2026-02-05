@@ -24,3 +24,15 @@ class UserRestaurantRead(BaseModel):
     
     class Config:
         from_attributes = True
+
+class FavoriteResponse(BaseModel):
+    is_favorite: bool
+
+class VisitedResponse(BaseModel):
+    is_visited: bool
+
+class FavoritesListResponse(BaseModel):
+    restaurant_ids: list[UUID]
+
+class VisitedListResponse(BaseModel):
+    restaurant_ids: list[UUID]
