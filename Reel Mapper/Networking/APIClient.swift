@@ -6,7 +6,7 @@ struct APIConfig {
     
     // URL Configuration
     static let localURL = "http://localhost:8000"
-    static let productionURL = "http://18.119.1.225:8000"  // AWS EC2 Backend
+    static let productionURL = "http://3.132.121.16:8000"  // AWS EC2 Backend
     
     // Use local URL for development, production URL when deployed
     static var baseURL: String {
@@ -25,21 +25,6 @@ class APIClient {
     private let jsonDecoder = JSONDecoder()
     
     func request<T: Decodable>(_ endpoint: Endpoint, body: Encodable? = nil, retryCount: Int = 0, isTokenRefreshRetry: Bool = false) async throws -> T {
-        // Special case for Void return (204 No Content)
-        // If T is Void.self (or EmptyResponse), we need to handle empty body.
-        // Swift's Decodable doesn't handle Void easily. 
-        // We might need a separate requestVoid method or handle it inside.
-        // Simpler approach: Make a requestVoid method.
-        return try await _request(endpoint, body: body, retryCount: retryCount, isTokenRefreshRetry: isTokenRefreshRetry)
-    }
-
-    // Helper for Void requests (204 No Content)
-    func requestVoid(_ endpoint: Endpoint, body: Encodable? = nil, retryCount: Int = 0) async throws {
-        _ = try await _request(endpoint, body: body, retryCount: retryCount, isTokenRefreshRetry: false) as EmptyResponse?
-    }
-    
-    // Internal generic request implementation
-    private func _request<T: Decodable>(_ endpoint: Endpoint, body: Encodable? = nil, retryCount: Int = 0, isTokenRefreshRetry: Bool = false) async throws -> T {
         print("DEBUG API: Starting request to \(endpoint.path), retry: \(retryCount), tokenRefresh: \(isTokenRefreshRetry)")
         
         guard let url = URL(string: APIConfig.baseURL + endpoint.path) else {
@@ -84,22 +69,6 @@ class APIClient {
             
             switch httpResponse.statusCode {
             case 200...299:
-                // Handle 204 No Content or empty body
-                if httpResponse.statusCode == 204 {
-                    // If T is Optional, return nil. If T is EmptyResponse, return it.
-                    // This is tricky with generics.
-                    // Hack: If data is empty and T is EmptyResponse, return empty struct.
-                    if data.isEmpty {
-                         if T.self == EmptyResponse.self {
-                             // Force cast (safe because EmptyResponse is empty)
-                             let empty = EmptyResponse()
-                             return empty as! T
-                         }
-                         // If T is Optional<Something>, we can't easily return nil here without more constrained generics.
-                         // But our requestVoid usages will pass T=EmptyResponse? or similar.
-                    }
-                }
-
                 do {
                     print("DEBUG API: Attempting to decode response data...")
                     let decoded = try jsonDecoder.decode(T.self, from: data)
@@ -237,21 +206,5 @@ class APIClient {
     func createList(name: String) async throws -> ListCreateResponse {
         let payload = CreateListRequest(name: name)
         return try await request(.lists, body: payload)
-    }
-    
-    func deleteList(id: UUID) async throws {
-        try await requestVoid(.deleteList(id: id))
-    }
-    
-    func deleteUserRestaurant(id: UUID) async throws {
-        try await requestVoid(.deleteUserRestaurant(id: id))
-    }
-    
-    func deleteSavedRestaurant(restaurantId: UUID) async throws {
-        try await requestVoid(.deleteSavedRestaurant(restaurantId: restaurantId))
-    }
-    
-    func removeFromList(listId: UUID, restaurantId: UUID) async throws {
-        try await requestVoid(.removeFromList(listId: listId, restaurantId: restaurantId))
     }
 }
