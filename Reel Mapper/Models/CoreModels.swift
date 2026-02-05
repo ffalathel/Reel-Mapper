@@ -6,6 +6,20 @@ struct User: Codable, Identifiable {
     // created_at can remain as String or Date depending on decoding strategy. Using String for now for simplicity unless Date decoding strategy is set.
 }
 
+struct UserProfile: Codable, Equatable {
+    let id: UUID
+    let email: String
+    let name: String?
+    let createdAt: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case email
+        case name
+        case createdAt = "created_at"
+    }
+}
+
 struct Restaurant: Codable, Identifiable, Hashable {
     let id: UUID
     let name: String
@@ -44,7 +58,7 @@ struct Restaurant: Codable, Identifiable, Hashable {
 
 struct UserList: Codable, Identifiable, Hashable {
     let id: UUID
-    let userId: UUID
+    let userId: UUID?  // Optional - backend doesn't always return this
     let name: String
 
     enum CodingKeys: String, CodingKey {

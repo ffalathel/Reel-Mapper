@@ -35,15 +35,14 @@ class ListDetailViewModel: ObservableObject {
         let originalRestaurants = restaurants
         restaurants.removeAll { $0.id == restaurant.id }
         
-        // TODO: Implement DELETE /user-restaurants/{id}
-        // For now, the optimistic update stays (no API call yet)
-        // When API is implemented, add error handling to rollback:
-        // do {
-        //     try await APIClient.shared.removeRestaurant(restaurant.id)
-        // } catch {
-        //     restaurants = originalRestaurants
-        //     errorMessage = "Failed to remove restaurant: \(error.localizedDescription)"
-        // }
-        _ = originalRestaurants // Suppress warning until API is implemented
+        do {
+            try await APIClient.shared.removeFromList(listId: list.id, restaurantId: restaurant.id)
+            // Success
+        } catch {
+            print("Failed to remove restaurant from list: \(error)")
+            // Rollback
+            restaurants = originalRestaurants
+            errorMessage = "Failed to remove restaurant"
+        }
     }
 }

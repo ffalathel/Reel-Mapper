@@ -16,6 +16,19 @@ struct CreateSaveEventResponse: Codable {
     let status: String
 }
 
+// Wrapper for backend UserRestaurantRead response
+// Backend returns: {id, restaurant: {...}, created_at}
+struct UserRestaurantResponse: Codable {
+    let id: UUID
+    let restaurant: Restaurant
+    let createdAt: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case id, restaurant
+        case createdAt = "created_at"
+    }
+}
+
 struct HomeResponse: Codable {
     let lists: [UserList]
     let unsortedRestaurants: [Restaurant]
@@ -23,6 +36,24 @@ struct HomeResponse: Codable {
     enum CodingKeys: String, CodingKey {
         case lists
         case unsortedRestaurants = "unsorted_restaurants"
+    }
+    
+    // Custom decoder to handle nested restaurant objects from backend
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        lists = try container.decode([UserList].self, forKey: .lists)
+        
+        // Backend returns array of {id, restaurant: {...}, created_at}
+        // We need to extract just the restaurant objects
+        let userRestaurants = try container.decode([UserRestaurantResponse].self, forKey: .unsortedRestaurants)
+        unsortedRestaurants = userRestaurants.map { $0.restaurant }
+    }
+    
+    // Standard encoder for completeness
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(lists, forKey: .lists)
+        try container.encode(unsortedRestaurants, forKey: .unsortedRestaurants)
     }
 }
 
@@ -67,3 +98,24 @@ struct VisitedListResponse: Codable {
         case restaurantIds = "restaurant_ids"
     }
 }
+
+// MARK: - List/Folder DTOs
+
+struct CreateListRequest: Codable {
+    let name: String
+}
+
+struct ListCreateResponse: Codable {
+    let id: UUID
+    let name: String
+    let userId: UUID
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case userId = "user_id"
+    }
+}
+
+// MARK: - Generic
+struct EmptyResponse: Codable {}

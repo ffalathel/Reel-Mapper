@@ -7,18 +7,17 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		022B48B32F33063D002F0C31 /* UserManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 022B48B22F33063D002F0C31 /* UserManager.swift */; };
+		0281B1902F34622B00E91E5F /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0281B18F2F34622B00E91E5F /* Package.swift */; };
+		02B520612F3465B100638749 /* Clerk in Frameworks */ = {isa = PBXBuildFile; productRef = 0281B18E2F34587600E91E5F /* Clerk */; };
 		28FF86CC63F1EDA91E89AAB2 /* ErrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA90098C92FCFC407D910FF7 /* ErrorView.swift */; };
-		2EFF3C3328BD7082C0AE3575 /* DTOs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F1E9EBC31869C497AF832DC /* DTOs.swift */; };
 		308C3491510C4FC047077214 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AEAE628752177B445BCB67E /* HomeView.swift */; };
 		3629F1AB3DED47CE16B26B56 /* RestaurantDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A2DEBE95489C54567B45FE /* RestaurantDetailView.swift */; };
 		3642CDC8BBCFB7A6AB0833B1 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 239878F7AE0451145ECEB0D4 /* AuthManager.swift */; };
 		3CD1D1080FC819F5CBBFC013 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5E9DB2A1E52383E07E31511 /* HomeViewModel.swift */; };
 		42A696872E42F452F92BD40B /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E42154996162A959C4454EA /* AppState.swift */; };
 		4638B56259FA8D21C654D972 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6ED7D5A38FEE236E2A5E7C1 /* APIClient.swift */; };
-		65AE3B5A89E66F8BDD8F5CD3 /* Endpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830F8EEADA2BBF2024803A35 /* Endpoint.swift */; };
-		6C504E43546079FEBD159E02 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 239878F7AE0451145ECEB0D4 /* AuthManager.swift */; };
 		7077F865851846C5362D5E44 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4A04CC43458FD9AD54E037C /* ShareViewController.swift */; };
-		7A724EA12A6177D28FA58C1D /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6ED7D5A38FEE236E2A5E7C1 /* APIClient.swift */; };
 		836DDC46C006F66086A8261C /* CoreModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B4B4FF7674D084E967E3C17 /* CoreModels.swift */; };
 		8CB5658A82C313F12E0BE48B /* ListCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA443303FE0BB0F743A73F38 /* ListCardView.swift */; };
 		913106C93A7857358EE4C7C0 /* RestaurantCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BE54140A46D00E22127971D /* RestaurantCardView.swift */; };
@@ -26,13 +25,10 @@
 		954FA444F08FF2E5985FCA99 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB230DF83D71C4177868D13A /* ContentView.swift */; };
 		96A682E8DDD131F9E2891723 /* Reel_MapperApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7D81B1CF654D8CC3F1384EA /* Reel_MapperApp.swift */; };
 		B338A756AF8F88215218B55D /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 52B3358027D500733C5A3463 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		B608985989A18F8ED3086092 /* APIError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B39C7C2651E12B59FBF9564 /* APIError.swift */; };
 		B73CD79B6D8934F2B6101223 /* DTOs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F1E9EBC31869C497AF832DC /* DTOs.swift */; };
-		BF54C47B853913C8EBEF978E /* CoreModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B4B4FF7674D084E967E3C17 /* CoreModels.swift */; };
 		BFA14F1558A16982750F21BE /* FavoritesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB1B0373A20ED0F96A9660C7 /* FavoritesManager.swift */; };
 		D3B7388247C131956BD6EDA8 /* APIError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B39C7C2651E12B59FBF9564 /* APIError.swift */; };
 		D7B6E11EA89AA64AA3B3619F /* Endpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830F8EEADA2BBF2024803A35 /* Endpoint.swift */; };
-		E1826360E407DF4A50A40BAA /* FavoritesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB1B0373A20ED0F96A9660C7 /* FavoritesManager.swift */; };
 		EDB7FDBEF1180EA9EF0AF174 /* LoadingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BCE243F07D40A24E6F50EC5 /* LoadingState.swift */; };
 		F2B34742A4BD878CB00E1B92 /* ListDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B4B6FD8676EFDBA1921438D /* ListDetailView.swift */; };
 /* End PBXBuildFile section */
@@ -62,6 +58,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		022B48B22F33063D002F0C31 /* UserManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManager.swift; sourceTree = "<group>"; };
+		0281B18F2F34622B00E91E5F /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		0AEAE628752177B445BCB67E /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		0BE54140A46D00E22127971D /* RestaurantCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestaurantCardView.swift; sourceTree = "<group>"; };
 		1B39C7C2651E12B59FBF9564 /* APIError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIError.swift; sourceTree = "<group>"; };
@@ -90,10 +88,29 @@
 		FB1B0373A20ED0F96A9660C7 /* FavoritesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFrameworksBuildPhase section */
+		02BAC1112F34657100ECDB67 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				02B520612F3465B100638749 /* Clerk in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
 /* Begin PBXGroup section */
+		02BAC1122F34658100ECDB67 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		07561CF9ADDD4DB6396E456C /* Managers */ = {
 			isa = PBXGroup;
 			children = (
+				022B48B22F33063D002F0C31 /* UserManager.swift */,
 				FB1B0373A20ED0F96A9660C7 /* FavoritesManager.swift */,
 			);
 			path = Managers;
@@ -127,6 +144,7 @@
 				565E8BA290E1B8BA63BC06DA /* ReelMapper.entitlements */,
 				E74F757733AC7972DE1EFF8A /* ShareExtension.entitlements */,
 				D225CD093285583EFD30A90C /* Products */,
+				02BAC1122F34658100ECDB67 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -142,6 +160,7 @@
 				BB230DF83D71C4177868D13A /* ContentView.swift */,
 				59725435C8DB30CAFE575D62 /* Info.plist */,
 				E7D81B1CF654D8CC3F1384EA /* Reel_MapperApp.swift */,
+				0281B18F2F34622B00E91E5F /* Package.swift */,
 			);
 			path = "Reel Mapper";
 			sourceTree = "<group>";
@@ -221,6 +240,7 @@
 			buildPhases = (
 				C0322BF2AA936E68DAFE141C /* Sources */,
 				A041179346D6F31093D280FB /* Embed Foundation Extensions */,
+				02BAC1112F34657100ECDB67 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -229,6 +249,7 @@
 			);
 			name = "Reel Mapper";
 			packageProductDependencies = (
+				0281B18E2F34587600E91E5F /* Clerk */,
 			);
 			productName = "Reel Mapper";
 			productReference = 9E88EF46519C0FF21275F3E8 /* Reel Mapper.app */;
@@ -246,9 +267,6 @@
 					0EDC0D54759F88EC3B4804E5 = {
 						ProvisioningStyle = Automatic;
 					};
-					939E2CD15303EBC2A9CB9BF1 = {
-						ProvisioningStyle = Automatic;
-					};
 				};
 			};
 			buildConfigurationList = 5E40D70269B2EAD9C465FDB9 /* Build configuration list for PBXProject "Reel Mapper" */;
@@ -261,6 +279,9 @@
 			);
 			mainGroup = 4B3CBB2B523C04C729C92F77;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				0281B18D2F34587600E91E5F /* XCRemoteSwiftPackageReference "clerk-ios" */,
+			);
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -275,13 +296,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7A724EA12A6177D28FA58C1D /* APIClient.swift in Sources */,
-				B608985989A18F8ED3086092 /* APIError.swift in Sources */,
-				6C504E43546079FEBD159E02 /* AuthManager.swift in Sources */,
-				BF54C47B853913C8EBEF978E /* CoreModels.swift in Sources */,
-				2EFF3C3328BD7082C0AE3575 /* DTOs.swift in Sources */,
-				65AE3B5A89E66F8BDD8F5CD3 /* Endpoint.swift in Sources */,
-				E1826360E407DF4A50A40BAA /* FavoritesManager.swift in Sources */,
 				7077F865851846C5362D5E44 /* ShareViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -293,6 +307,7 @@
 				4638B56259FA8D21C654D972 /* APIClient.swift in Sources */,
 				D3B7388247C131956BD6EDA8 /* APIError.swift in Sources */,
 				42A696872E42F452F92BD40B /* AppState.swift in Sources */,
+				0281B1902F34622B00E91E5F /* Package.swift in Sources */,
 				3642CDC8BBCFB7A6AB0833B1 /* AuthManager.swift in Sources */,
 				954FA444F08FF2E5985FCA99 /* ContentView.swift in Sources */,
 				836DDC46C006F66086A8261C /* CoreModels.swift in Sources */,
@@ -308,6 +323,7 @@
 				EDB7FDBEF1180EA9EF0AF174 /* LoadingState.swift in Sources */,
 				96A682E8DDD131F9E2891723 /* Reel_MapperApp.swift in Sources */,
 				913106C93A7857358EE4C7C0 /* RestaurantCardView.swift in Sources */,
+				022B48B32F33063D002F0C31 /* UserManager.swift in Sources */,
 				3629F1AB3DED47CE16B26B56 /* RestaurantDetailView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -329,17 +345,21 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = ReelMapper.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = C5U67W3J9K;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = "Reel Mapper/Info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.food-and-drink";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				"LD_RUNPATH_SEARCH_PATHS[arch=*]" = Clerk;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.reelmapper.app;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -390,7 +410,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -471,7 +491,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -508,17 +528,20 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = ReelMapper.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = C5U67W3J9K;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = "Reel Mapper/Info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.food-and-drink";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.reelmapper.app;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -555,6 +578,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0281B18D2F34587600E91E5F /* XCRemoteSwiftPackageReference "clerk-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/clerk/clerk-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.71.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0281B18E2F34587600E91E5F /* Clerk */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0281B18D2F34587600E91E5F /* XCRemoteSwiftPackageReference "clerk-ios" */;
+			productName = Clerk;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 3D887FED4DFECCA609C66BD4 /* Project object */;
 }

@@ -197,4 +197,11 @@ class FavoritesManager: ObservableObject {
     func clearError() {
         errorMessage = nil
     }
+    
+    /// Clear all favorites and visited data (used on sign out)
+    func clearAll() {
+        favoriteRestaurantIds = []
+        visitedRestaurantIds = []
+        saveToUserDefaults()
+    }
 }

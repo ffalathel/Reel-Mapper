@@ -43,27 +43,56 @@ class HomeViewModel: ObservableObject {
         }
     }
     
-    func fetchHome() async {
+    func fetchHome(silent: Bool = false) async {
+        print("DEBUG HomeViewModel: fetchHome called (silent: \(silent))")
+        
         if useMockData {
+            print("DEBUG HomeViewModel: Using mock data, skipping API call")
             // Skip API call when using mock data
             return
         }
         
         isLoading = true
-        errorMessage = nil
+        if !silent {
+            errorMessage = nil
+        }
         
         do {
+            print("DEBUG HomeViewModel: Calling getHome API...")
             let response = try await APIClient.shared.getHome()
+            print("DEBUG HomeViewModel: Got \(response.lists.count) lists and \(response.unsortedRestaurants.count) restaurants")
             lists = response.lists
             unsortedRestaurants = response.unsortedRestaurants
+            // Clear any previous errors on success
+            errorMessage = nil
+        } catch APIError.unauthorized {
+            // Token is invalid/expired - force sign out silently
+            print("HomeViewModel: 401 Unauthorized - Signing out")
+            Task {
+                try? await AuthManager.shared.signOut()
+            }
+            // Reset local state
+            lists = []
+            unsortedRestaurants = []
+            // Don't set errorMessage - this is expected for unauthenticated users
         } catch {
-            errorMessage = "Failed to load home: \(error.localizedDescription)"
+            print("DEBUG HomeViewModel: fetchHome failed with error: \(error)")
+            // Only show error message if not silent (i.e., not from polling)
+            if !silent {
+                errorMessage = "Failed to load home: \(error.localizedDescription)"
+            }
         }
         
         isLoading = false
+        print("DEBUG HomeViewModel: fetchHome completed, isLoading=false")
     }
     
     func startPolling() {
+        // TEMPORARILY DISABLED - Polling causes timeouts
+        print("DEBUG HomeViewModel: Polling disabled")
+        return
+        
+        /*
         if useMockData {
             // Skip polling when using mock data
             return
@@ -77,15 +106,55 @@ class HomeViewModel: ObservableObject {
                 try? await Task.sleep(nanoseconds: 5_000_000_000) // 5 seconds
                 
                 if !Task.isCancelled {
-                    await fetchHome()
+                    // Use silent mode to avoid showing error alerts during polling
+                    await fetchHome(silent: true)
                 }
             }
         }
+        */
     }
     
     func stopPolling() {
         pollingTask?.cancel()
         pollingTask = nil
+    }
+    
+    // MARK: - Deletion Actions
+    
+    func deleteList(_ list: UserList) {
+        // Optimistic update
+        let originalLists = lists
+        lists.removeAll { $0.id == list.id }
+        
+        Task {
+            do {
+                try await APIClient.shared.deleteList(id: list.id)
+            } catch {
+                print("Failed to delete list: \(error)")
+                await MainActor.run {
+                    lists = originalLists
+                    errorMessage = "Failed to delete folder"
+                }
+            }
+        }
+    }
+    
+    func deleteRestaurant(_ restaurant: Restaurant) {
+        // Optimistic update (remove from Unsorted)
+        let originalRestaurants = unsortedRestaurants
+        unsortedRestaurants.removeAll { $0.id == restaurant.id }
+        
+        Task {
+            do {
+                try await APIClient.shared.deleteSavedRestaurant(restaurantId: restaurant.id)
+            } catch {
+                print("Failed to delete restaurant: \(error)")
+                await MainActor.run {
+                    unsortedRestaurants = originalRestaurants
+                    errorMessage = "Failed to delete restaurant"
+                }
+            }
+        }
     }
     
     private func loadMockData() {

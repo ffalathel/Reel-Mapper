@@ -1,4 +1,5 @@
 import SwiftUI
+import Clerk
 
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel.shared
@@ -77,6 +78,13 @@ struct HomeView: View {
                                                 ListCardView(list: list)
                                             }
                                             .buttonStyle(PlainButtonStyle())
+                                            .contextMenu {
+                                                Button(role: .destructive, action: {
+                                                    viewModel.deleteList(list)
+                                                }) {
+                                                    Label("Delete Folder", systemImage: "trash")
+                                                }
+                                            }
                                         }
                                     }
                                     .padding(.horizontal)
@@ -112,6 +120,13 @@ struct HomeView: View {
                                             RestaurantCardView(restaurant: restaurant)
                                         }
                                         .buttonStyle(PlainButtonStyle())
+                                        .contextMenu {
+                                            Button(role: .destructive, action: {
+                                                viewModel.deleteRestaurant(restaurant)
+                                            }) {
+                                                Label("Delete Restaurant", systemImage: "trash")
+                                            }
+                                        }
                                     }
                                 }
                                 .padding(.horizontal)
@@ -141,7 +156,7 @@ struct HomeView: View {
                 }
             }
             .task {
-                // Only fetch if user is authenticated
+                // Only fetch if user is authenticated (checked from environment in parent)
                 await viewModel.fetchHome()
                 viewModel.startPolling()
             }
@@ -237,7 +252,10 @@ struct MenuView: View {
 struct AccountView: View {
     @StateObject private var viewModel = HomeViewModel.shared
     @StateObject private var favoritesManager = FavoritesManager.shared
+    @StateObject private var userManager = UserManager.shared
     @State private var showEditProfile = false
+    @State private var showAuthView = false
+    @State private var isAuthenticated = false  // Set on appear from Clerk state
     
     var body: some View {
         ScrollView {
@@ -252,7 +270,7 @@ struct AccountView: View {
                             .overlay(
                                 Image(systemName: "person.fill")
                                     .font(.system(size: 40))
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(.gray)
                             )
                         
                         Button(action: {}) {
@@ -266,22 +284,55 @@ struct AccountView: View {
                     }
                     
                     VStack(spacing: 4) {
-                        Text("Welcome")
-                            .font(.system(size: 24, weight: .bold))
-                        
-                        Text("Sign in to get started")
-                            .font(.system(size: 15))
-                            .foregroundColor(.secondary)
+                        if isAuthenticated {
+                            Text(userManager.currentUser?.name ?? "Welcome Back!")
+                                .font(.system(size: 24, weight: .bold))
+                            
+                            Text(userManager.currentUser?.email ?? "Loading...")
+                                .font(.system(size: 15))
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("Welcome")
+                                .font(.system(size: 24, weight: .bold))
+                            
+                            Text("Sign in to get started")
+                                .font(.system(size: 15))
+                                .foregroundColor(.secondary)
+                        }
                     }
                     
-                    Button(action: { showEditProfile = true }) {
-                        Text("Edit Profile")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundColor(.red)
-                            .padding(.horizontal, 24)
-                            .padding(.vertical, 10)
-                            .background(Color(.systemGray6))
-                            .clipShape(Capsule())
+                    if isAuthenticated {
+                        HStack(spacing: 12) {
+                            Button(action: { showEditProfile = true }) {
+                                Text("Edit Profile")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundColor(.red)
+                                    .padding(.horizontal, 24)
+                                    .padding(.vertical, 10)
+                                    .background(Color(.systemGray6))
+                                    .clipShape(Capsule())
+                            }
+                            
+                            Button(action: signOut) {
+                                Text("Sign Out")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 24)
+                                    .padding(.vertical, 10)
+                                    .background(Color.red)
+                                    .clipShape(Capsule())
+                            }
+                        }
+                    } else {
+                        Button(action: { showAuthView = true }) {
+                            Text("Sign In / Sign Up")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 32)
+                                .padding(.vertical, 12)
+                                .background(Color.red)
+                                .clipShape(Capsule())
+                        }
                     }
                 }
                 .padding(.top, 20)
@@ -370,29 +421,69 @@ struct AccountView: View {
                 .cornerRadius(12)
                 .padding(.horizontal)
                 
-                // Logout
-                Button(action: {}) {
-                    HStack {
-                        Image(systemName: "arrow.right.square.fill")
-                            .font(.system(size: 20))
-                            .foregroundColor(.red)
-                        Text("Log Out")
-                            .font(.system(size: 17, weight: .medium))
-                            .foregroundColor(.red)
+                // Logout - only show when authenticated
+                if isAuthenticated {
+                    Button(action: signOut) {
+                        HStack {
+                            Image(systemName: "arrow.right.square.fill")
+                                .font(.system(size: 20))
+                                .foregroundColor(.red)
+                            Text("Log Out")
+                                .font(.system(size: 17, weight: .medium))
+                                .foregroundColor(.red)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
+                    .padding(.horizontal)
                 }
-                .padding(.horizontal)
-                .padding(.bottom, 32)
+                
+                Spacer().frame(height: 32)
             }
         }
         .navigationTitle("Account")
         .navigationBarTitleDisplayMode(.inline)
+        .task {
+            if isAuthenticated {
+                await userManager.fetchCurrentUser()
+            }
+        }
         .sheet(isPresented: $showEditProfile) {
             EditProfileView()
+        }
+        .sheet(isPresented: $showAuthView) {
+            AuthView()
+                .onDisappear {
+                    isAuthenticated = Clerk.shared.user != nil
+                    if isAuthenticated {
+                        Task {
+                            await userManager.fetchCurrentUser()
+                            await viewModel.fetchHome()
+                        }
+                    }
+                }
+        }
+        .onChange(of: userManager.currentUser) { _ in
+            // Re-evaluate auth state when user changes (e.g. becomes nil on logout)
+            isAuthenticated = Clerk.shared.user != nil
+        }
+        .onAppear {
+            isAuthenticated = Clerk.shared.user != nil
+        }
+    }
+    
+    private func signOut() {
+        Task {
+            try? await AuthManager.shared.signOut()
+            await MainActor.run {
+                userManager.clearUser()
+                favoritesManager.clearAll()
+                isAuthenticated = false
+                viewModel.unsortedRestaurants = []
+                viewModel.lists = []
+            }
         }
     }
 }
@@ -537,6 +628,13 @@ struct FoldersView: View {
                                 FolderRowView(folder: list)
                             }
                             .buttonStyle(PlainButtonStyle())
+                            .contextMenu {
+                                Button(role: .destructive, action: {
+                                    viewModel.deleteList(list)
+                                }) {
+                                    Label("Delete Folder", systemImage: "trash")
+                                }
+                            }
                         }
                     }
                     .padding(.horizontal)
@@ -572,7 +670,7 @@ struct FolderRowView: View {
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundColor(.primary)
                 
-                Text("0 restaurants") // TODO: Get actual count
+                Text("Tap to view")
                     .font(.system(size: 14))
                     .foregroundColor(.secondary)
             }
@@ -593,6 +691,10 @@ struct AddFolderView: View {
     @Environment(\.dismiss) var dismiss
     @State private var folderName = ""
     @State private var folderDescription = ""
+    @State private var isCreating = false
+    @State private var showSuccess = false
+    @State private var showError = false
+    @State private var errorMessage = ""
     
     var body: some View {
         NavigationStack {
@@ -603,11 +705,18 @@ struct AddFolderView: View {
                 }
                 
                 Section {
-                    Button("Create Folder") {
-                        // TODO: Create folder via API
-                        dismiss()
+                    Button(action: createFolder) {
+                        if isCreating {
+                            HStack {
+                                ProgressView()
+                                    .padding(.trailing, 8)
+                                Text("Creating...")
+                            }
+                        } else {
+                            Text("Create Folder")
+                        }
                     }
-                    .disabled(folderName.isEmpty)
+                    .disabled(folderName.isEmpty || isCreating)
                 }
             }
             .navigationTitle("New Folder")
@@ -617,6 +726,50 @@ struct AddFolderView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                }
+            }
+            .alert("Success!", isPresented: $showSuccess) {
+                Button("OK") {
+                    dismiss()
+                }
+            } message: {
+                Text("Folder '\(folderName)' created successfully!")
+            }
+            .alert("Error", isPresented: $showError) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(errorMessage)
+            }
+        }
+    }
+    
+    private func createFolder() {
+        print("DEBUG: createFolder called with name: '\(folderName)'")
+        isCreating = true
+        
+        Task {
+            do {
+                print("DEBUG: Calling createList API...")
+                let response = try await APIClient.shared.createList(name: folderName)
+                print("DEBUG: createList succeeded, got response: \(response)")
+                
+                // Refresh home data
+                print("DEBUG: Refreshing home data...")
+                await HomeViewModel.shared.fetchHome()
+                
+                await MainActor.run {
+                    isCreating = false
+                    showSuccess = true
+                    print("DEBUG: Showing success alert")
+                }
+            } catch {
+                print("DEBUG: createList failed with error: \(error)")
+                print("DEBUG: Error localized description: \(error.localizedDescription)")
+                await MainActor.run {
+                    isCreating = false
+                    errorMessage = "Failed to create folder: \(error.localizedDescription)"
+                    showError = true
+                    print("DEBUG: Showing error alert with message: \(errorMessage)")
                 }
             }
         }
@@ -771,6 +924,9 @@ struct AddFromInstagramView: View {
     @Environment(\.dismiss) var dismiss
     @State private var instagramLink = ""
     @State private var isProcessing = false
+    @State private var showSuccess = false
+    @State private var showError = false
+    @State private var errorMessage = ""
     
     var body: some View {
         NavigationStack {
@@ -884,17 +1040,42 @@ struct AddFromInstagramView: View {
                     }
                 }
             }
+            .alert("Success!", isPresented: $showSuccess) {
+                Button("OK") {
+                    dismiss()
+                }
+            } message: {
+                Text("Restaurant link saved! It will appear on your home screen shortly.")
+            }
+            .alert("Error", isPresented: $showError) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(errorMessage)
+            }
         }
     }
     
     private func addRestaurant() {
         isProcessing = true
         
-        // TODO: Call API to process Instagram link
-        // For now, just simulate a delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            isProcessing = false
-            dismiss()
+        Task {
+            do {
+                let _ = try await APIClient.shared.saveEvent(url: instagramLink, caption: nil, listId: nil)
+                
+                // Refresh home data after saving
+                await HomeViewModel.shared.fetchHome()
+                
+                await MainActor.run {
+                    isProcessing = false
+                    showSuccess = true
+                }
+            } catch {
+                await MainActor.run {
+                    isProcessing = false
+                    errorMessage = "Failed to save: \(error.localizedDescription)"
+                    showError = true
+                }
+            }
         }
     }
 }
@@ -1180,3 +1361,4 @@ struct FilterView: View {
         }
     }
 }
+

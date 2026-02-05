@@ -1,4 +1,5 @@
 import Foundation
+import Clerk
 
 @MainActor
 class AppState: ObservableObject {
@@ -7,17 +8,20 @@ class AppState: ObservableObject {
     @Published var isAuthenticated: Bool = false
     
     private init() {
-        // Check if token exists on init
-        isAuthenticated = AuthManager.shared.getToken() != nil
+        // Initial state - will be updated when Clerk loads
+        updateAuthState()
     }
     
-    func login(token: String) {
-        AuthManager.shared.saveToken(token)
-        isAuthenticated = true
+    func updateAuthState() {
+        isAuthenticated = Clerk.shared.user != nil
     }
     
-    func logout() {
-        // In production, would clear token from Keychain
-        isAuthenticated = false
+    func logout() async {
+        do {
+            try await AuthManager.shared.signOut()
+            isAuthenticated = false
+        } catch {
+            print("AppState: Failed to sign out: \(error)")
+        }
     }
 }

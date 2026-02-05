@@ -1,14 +1,13 @@
 // Reel Mapper Share/ShareViewController.swift
 import UIKit
 import Social
+
 class ShareViewController: UIViewController {
     
     private let appGroupID = "group.com.reelmapper.shared"
     
-    // Use APIConfig for URL - falls back to mock mode if enabled
-    private var apiBaseURL: String {
-        APIConfig.useMockMode ? APIConfig.localURL : APIConfig.productionURL
-    }
+    // API Configuration for Share Extension
+    private let apiBaseURL = "http://18.119.1.225:8000"  // Production URL
     
     private var activityIndicator: UIActivityIndicatorView!
     private var statusLabel: UILabel!
@@ -74,17 +73,9 @@ class ShareViewController: UIViewController {
     }
     
     private func saveToBackend(url: URL) {
-        // In mock mode, simulate success without making API call
-        if APIConfig.useMockMode {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                self?.showSuccess()
-            }
-            return
-        }
-        
         // Get auth token
         guard let token = getAuthToken() else {
-            showError("Please log in to Reel Mapper first")
+            showError("Open Reel Mapper first to refresh your session")
             return
         }
         
@@ -140,7 +131,16 @@ class ShareViewController: UIViewController {
     
     private func getAuthToken() -> String? {
         let sharedDefaults = UserDefaults(suiteName: appGroupID)
-        return sharedDefaults?.string(forKey: "authToken")
+        
+        // Check if token exists and is not expired
+        guard let expiry = sharedDefaults?.object(forKey: "clerk_token_expiry") as? Date,
+              expiry > Date(),
+              let token = sharedDefaults?.string(forKey: "clerk_session_token") else {
+            // Token expired or doesn't exist — user needs to open the main app first
+            return nil
+        }
+        
+        return token
     }
     
     private func showSuccess() {

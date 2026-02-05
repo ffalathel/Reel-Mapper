@@ -1,6 +1,6 @@
 import Foundation
 
-enum APIError: Error {
+enum APIError: Error, LocalizedError {
     case invalidURL
     case serializationError
     case unauthorized // 401
@@ -9,7 +9,7 @@ enum APIError: Error {
     case decodingError(Error)
     case unknown(Error)
     
-    var localizedDescription: String {
+    var errorDescription: String? {
         switch self {
         case .invalidURL: return "Invalid URL"
         case .serializationError: return "Failed to serialize request"
