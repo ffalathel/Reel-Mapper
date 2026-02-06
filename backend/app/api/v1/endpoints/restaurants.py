@@ -12,6 +12,55 @@ from app.models.note import Note
 
 router = APIRouter()
 
+async def _toggle_user_restaurant_flag(
+    restaurant_id: UUID,
+    field_name: str,
+    db: AsyncSession,
+    current_user: Any
+) -> dict:
+    """
+    Generic helper to toggle boolean flags on UserRestaurant.
+
+    Args:
+        restaurant_id: UUID of the restaurant
+        field_name: Name of the boolean field to toggle ("is_favorite" or "is_visited")
+        db: Database session
+        current_user: Current authenticated user
+
+    Returns:
+        Dict with the field name and new boolean value
+
+    Raises:
+        HTTPException: 404 if restaurant not saved by user
+    """
+    # Query for existing UserRestaurant
+    stmt = (
+        select(UserRestaurant)
+        .where(UserRestaurant.restaurant_id == restaurant_id)
+        .where(UserRestaurant.user_id == current_user.id)
+    )
+    result = await db.execute(stmt)
+    existing = result.scalar_one_or_none()
+
+    if not existing:
+        # Restaurant not saved by user - cannot toggle flags
+        raise HTTPException(
+            status_code=404,
+            detail="Restaurant not saved by user"
+        )
+
+    # Toggle the field using getattr/setattr for dynamic field access
+    current_value = getattr(existing, field_name)
+    new_value = not current_value
+    setattr(existing, field_name, new_value)
+
+    db.add(existing)
+    await db.commit()
+    await db.refresh(existing)
+
+    # Return response with field name and new value
+    return {field_name: new_value}
+
 @router.get("/{restaurant_id}", response_model=schemas.RestaurantRead)
 async def get_restaurant(
     restaurant_id: UUID,
@@ -31,27 +80,13 @@ async def toggle_favorite(
     db: AsyncSession = Depends(deps.get_db),
     current_user: Any = Depends(deps.get_current_user),
 ) -> Any:
-    # Check if exists
-    stmt = (
-        select(UserRestaurant)
-        .where(UserRestaurant.restaurant_id == restaurant_id)
-        .where(UserRestaurant.user_id == current_user.id)
+    """Toggle favorite status for a restaurant."""
+    return await _toggle_user_restaurant_flag(
+        restaurant_id=restaurant_id,
+        field_name="is_favorite",
+        db=db,
+        current_user=current_user
     )
-    result = await db.execute(stmt)
-    existing = result.scalar_one_or_none()
-
-    if existing:
-        existing.is_favorite = not existing.is_favorite
-        db.add(existing)
-        await db.commit()
-        await db.refresh(existing)
-        return {"is_favorite": existing.is_favorite}
-    else:
-        # Restaurant not saved by user
-        raise HTTPException(
-            status_code=404,
-            detail="Restaurant not saved by user"
-        )
 
 @router.post("/{restaurant_id}/visited", response_model=schemas.VisitedResponse)
 async def toggle_visited(
@@ -59,27 +94,13 @@ async def toggle_visited(
     db: AsyncSession = Depends(deps.get_db),
     current_user: Any = Depends(deps.get_current_user),
 ) -> Any:
-    # Check if exists
-    stmt = (
-        select(UserRestaurant)
-        .where(UserRestaurant.restaurant_id == restaurant_id)
-        .where(UserRestaurant.user_id == current_user.id)
+    """Toggle visited status for a restaurant."""
+    return await _toggle_user_restaurant_flag(
+        restaurant_id=restaurant_id,
+        field_name="is_visited",
+        db=db,
+        current_user=current_user
     )
-    result = await db.execute(stmt)
-    existing = result.scalar_one_or_none()
-
-    if existing:
-        existing.is_visited = not existing.is_visited
-        db.add(existing)
-        await db.commit()
-        await db.refresh(existing)
-        return {"is_visited": existing.is_visited}
-    else:
-        # Restaurant not saved by user
-        raise HTTPException(
-            status_code=404,
-            detail="Restaurant not saved by user"
-        )
 
 @router.put("/{restaurant_id}/notes")
 async def save_notes(
