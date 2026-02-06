@@ -34,7 +34,7 @@ jobs:
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
               "cd /home/ec2-user/Reel-Mapper/backend",
-              "git config --global --add safe.directory /home/ec2-user/Reel-Mapper",
+              "git config --system --add safe.directory /home/ec2-user/Reel-Mapper",
               "git pull",
               "source venv/bin/activate",
               "pip install -r requirements.txt",
@@ -53,9 +53,10 @@ jobs:
           echo "Waiting for command to complete..."
           
           # Wait for command to complete (this will fail if command fails)
+          # We echo a message on failure to ensure the script continues
           aws ssm wait command-executed \
             --command-id $COMMAND_ID \
-            --instance-id "i-03988057c7d112661" || true
+            --instance-id "i-03988057c7d112661" || echo "Command finished with error state (this is expected for failing tests)"
           
           # Get detailed results (both success and error output)
           echo "=== COMMAND OUTPUT ==="
