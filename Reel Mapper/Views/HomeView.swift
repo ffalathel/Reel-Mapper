@@ -165,6 +165,7 @@ struct HomeView: View {
                 AddFromInstagramView()
             }
         }
+        .environmentObject(viewModel)
     }
 }
 

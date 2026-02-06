@@ -153,6 +153,30 @@ class HomeViewModel: ObservableObject {
         }
     }
     
+    func moveRestaurant(_ restaurant: Restaurant, to list: UserList) async {
+        // Optimistic update: Remove from unsorted if it's there
+        // Note: If it's in another list, we don't track that locally in HomeViewModel, 
+        // so we can't optimistically remove it from the source list easily without more complex state.
+        // But preventing it from showing in Unsorted is good.
+        let originalRestaurants = unsortedRestaurants
+        if unsortedRestaurants.contains(where: { $0.id == restaurant.id }) {
+            unsortedRestaurants.removeAll { $0.id == restaurant.id }
+        }
+        
+        do {
+            try await APIClient.shared.addRestaurantToList(listId: list.id, restaurantId: restaurant.id)
+            print("HomeViewModel: Successfully moved \(restaurant.name) to \(list.name)")
+            // Refresh home to ensure consistent state (especially if moving FROM another list)
+            // await fetchHome(silent: true) 
+            // Skipping fetchHome for better UX, relying on optimistic removal from Unsorted.
+        } catch {
+            print("HomeViewModel: Failed to move restaurant: \(error)")
+            // Revert
+            unsortedRestaurants = originalRestaurants
+            errorMessage = "Failed to move restaurant to folder: \(error.localizedDescription)"
+        }
+    }
+    
     private func loadMockData() {
         // Mock Lists/Folders - using fixed UUIDs
         lists = [

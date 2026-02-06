@@ -6,7 +6,7 @@ from sqlmodel import select
 from app.api import deps
 from app import schemas
 from app.models.list import List
-from app.models.save_event import UserRestaurant
+from app.models.save_event import UserRestaurant, SaveEvent
 
 router = APIRouter()
 
@@ -104,6 +104,15 @@ async def delete_list(
     for item in items:
         item.list_id = None
         db.add(item)
+        
+    # Also clean up any SaveEvents referencing this list
+    stmt_events = select(SaveEvent).where(SaveEvent.target_list_id == list_id)
+    result_events = await db.execute(stmt_events)
+    events = result_events.scalars().all()
+    
+    for event in events:
+        event.target_list_id = None
+        db.add(event)
         
     await db.delete(list_item)
     await db.commit()

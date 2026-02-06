@@ -3,6 +3,7 @@ import SwiftUI
 struct RestaurantCardView: View {
     let restaurant: Restaurant
     @StateObject private var favoritesManager = FavoritesManager.shared
+    @State private var showingAddToFolder = false
     
     // Generate a seeded placeholder image URL based on restaurant ID
     private var imageURL: URL {
@@ -49,10 +50,12 @@ struct RestaurantCardView: View {
                 .frame(height: 140)
                 .clipped()
                 
-                // Favorite star button (top-right)
+                // Action Buttons (Top-Right)
                 VStack {
                     HStack {
                         Spacer()
+                        
+                        // Favorite Button
                         Button(action: {
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
                                 favoritesManager.toggleFavorite(restaurant.id)
@@ -69,6 +72,33 @@ struct RestaurantCardView: View {
                                 )
                         }
                         .scaleEffect(favoritesManager.isFavorite(restaurant.id) ? 1.1 : 1.0)
+                        
+                        // Menu Button
+                        Menu {
+                            Button(action: {
+                                showingAddToFolder = true
+                            }) {
+                                Label("Add to Folder", systemImage: "folder.badge.plus")
+                            }
+                            
+                            Button(role: .destructive, action: {
+                                Task {
+                                    await HomeViewModel.shared.deleteRestaurant(restaurant)
+                                }
+                            }) {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis.circle.fill")
+                                .font(.system(size: 22)) // Slightly bigger for visibility
+                                .foregroundColor(.white)
+                                .padding(6) // Adjusted padding
+                                .background(
+                                    Circle()
+                                        .fill(Color.black.opacity(0.3))
+                                        .blur(radius: 2)
+                                )
+                        }
                     }
                     Spacer()
                 }
@@ -140,5 +170,9 @@ struct RestaurantCardView: View {
         .background(Color(.systemBackground))
         .cornerRadius(12)
         .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+        .sheet(isPresented: $showingAddToFolder) {
+            AddToFolderSheet(restaurant: restaurant)
+                .environmentObject(HomeViewModel.shared)
+        }
     }
 }

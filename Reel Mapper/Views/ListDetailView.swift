@@ -3,6 +3,9 @@ import SwiftUI
 struct ListDetailView: View {
     let list: UserList
     @StateObject private var viewModel: ListDetailViewModel
+    @State private var showingAddRestaurant = false
+    @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var homeViewModel: HomeViewModel
     
     init(list: UserList) {
         self.list = list
@@ -58,6 +61,31 @@ struct ListDetailView: View {
         }
         .navigationTitle(list.name)
         .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Menu {
+                    Button(action: {
+                        showingAddRestaurant = true
+                    }) {
+                        Label("Add Restaurant", systemImage: "plus")
+                    }
+                    
+                    Button(role: .destructive, action: {
+                        Task {
+                            await homeViewModel.deleteList(list)
+                            dismiss()
+                        }
+                    }) {
+                        Label("Delete Folder", systemImage: "trash")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                }
+            }
+        }
+        .sheet(isPresented: $showingAddRestaurant) {
+            AddRestaurantPicker(currentList: list)
+        }
         .overlay {
             if viewModel.isLoading {
                 ProgressView()

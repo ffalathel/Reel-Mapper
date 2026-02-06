@@ -208,6 +208,11 @@ class APIClient {
         return try await request(.lists, body: payload)
     }
     
+    func addRestaurantToList(listId: UUID, restaurantId: UUID) async throws {
+        let payload = AddRestaurantToListRequest(restaurantId: restaurantId)
+        let _: UserRestaurantResponse = try await request(.addRestaurantToList(listId: listId, restaurantId: restaurantId), body: payload)
+    }
+    
     func deleteList(id: UUID) async throws {
         // DELETE returns 204 No Content, so we expect empty body or handle it gracefully.
         // Our request method is generic <T: Decodable>. 

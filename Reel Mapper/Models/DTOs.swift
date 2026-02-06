@@ -117,11 +117,19 @@ struct CreateListRequest: Codable {
 struct ListCreateResponse: Codable {
     let id: UUID
     let name: String
-    let userId: UUID
+    let userId: UUID?
     
     enum CodingKeys: String, CodingKey {
         case id
         case name
         case userId = "user_id"
+    }
+}
+
+struct AddRestaurantToListRequest: Codable {
+    let restaurantId: UUID
+    
+    enum CodingKeys: String, CodingKey {
+        case restaurantId = "restaurant_id"
     }
 }
