@@ -78,18 +78,33 @@ def resolve_restaurant(session: Session, name: str, city: str) -> Restaurant:
 def finalize_save(session: Session, save_event: SaveEvent, restaurant: Restaurant):
     # 1. Create UserRestaurant
     # Check duplicate
-    stmt = select(UserRestaurant).where(UserRestaurant.user_id == save_event.user_id).where(UserRestaurant.restaurant_id == restaurant.id)
-    if session.exec(stmt).first():
-       print("Already saved")
-    else:
-        user_rest = UserRestaurant(
-            user_id=save_event.user_id,
-            restaurant_id=restaurant.id,
-            list_id=save_event.target_list_id,
-            source_event_id=save_event.id
-        )
-        session.add(user_rest)
-    
+    stmt = select(UserRestaurant).where(
+        UserRestaurant.user_id == save_event.user_id
+    ).where(
+        UserRestaurant.restaurant_id == restaurant.id
+    )
+
+    existing = session.exec(stmt).first()
+
+    if existing:
+        # Duplicate detected - mark SaveEvent as complete with note
+        print(f"Duplicate detected: user {save_event.user_id}, restaurant {restaurant.id}")
+        save_event.status = SaveEventStatus.COMPLETE.value
+        save_event.error_message = "Restaurant already saved"
+        session.add(save_event)
+        session.commit()
+        print(f"Marked SaveEvent {save_event.id} as complete (duplicate)")
+        return
+
+    # Not a duplicate - create new UserRestaurant
+    user_rest = UserRestaurant(
+        user_id=save_event.user_id,
+        restaurant_id=restaurant.id,
+        list_id=save_event.target_list_id,
+        source_event_id=save_event.id
+    )
+    session.add(user_rest)
+
     # 2. Update status
     save_event.status = SaveEventStatus.COMPLETE.value
     session.add(save_event)
