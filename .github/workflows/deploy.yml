@@ -40,8 +40,11 @@ jobs:
               "pip install -r requirements.txt",
               "alembic upgrade head",
               "sudo systemctl restart reelmapper-api",
-              "echo \"Current Status:\"",
+              "sudo systemctl restart reelmapper-worker",
+              "echo \"API Status:\"",
               "sudo systemctl status reelmapper-api --no-pager",
+              "echo \"Celery Worker Status:\"",
+              "sudo systemctl status reelmapper-worker --no-pager",
               "echo \"Checking Health...\"",
               "sleep 5",
               "curl -v http://localhost:8000/health || (echo \"Health check failed! Application logs:\" && sudo journalctl -u reelmapper-api -n 50 --no-pager && exit 1)"
