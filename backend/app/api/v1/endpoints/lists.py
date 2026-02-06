@@ -40,7 +40,7 @@ async def add_restaurant_to_list(
     *,
     db: AsyncSession = Depends(deps.get_db),
     list_id: str, # UUID
-    restaurant_id: str, # passed in body? TDD says POST /lists/{id}/restaurants. Body?
+    list_id: str, # UUID
     # TDD doesn't specify body shape, but presumably {restaurant_id: ...} 
     # Or maybe we are moving an existing UserRestaurant to a list?
     # TDD says: "POST /lists/{id}/restaurants".
