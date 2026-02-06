@@ -19,7 +19,7 @@ enum Endpoint {
     case getVisited
     
     // List Management
-    case createList
+    // case createList // Removed in favor of .lists
     case deleteList(id: UUID)
     
     // Notes
@@ -34,10 +34,10 @@ enum Endpoint {
         case .saveEvent: return "/api/v1/save-events/"
         case .home: return "/api/v1/home"
         case .restaurant(let id): return "/api/v1/restaurants/\(id.uuidString)"
-        case .lists, .createList: return "/api/v1/lists/"
+        case .lists: return "/api/v1/lists/"
         case .deleteList(let id): return "/api/v1/lists/\(id.uuidString)"
         case .currentUser: return "/api/v1/auth/me"
-        case .deleteRestaurant(let id): return "/api/v1/user-restaurants/\(id.uuidString)"
+        case .deleteRestaurant(let id): return "/api/v1/user-restaurants/restaurant/\(id.uuidString)"
         case .toggleFavorite(let id): return "/api/v1/restaurants/\(id.uuidString)/favorite"
         case .getFavorites: return "/api/v1/favorites"
         case .toggleVisited(let id): return "/api/v1/restaurants/\(id.uuidString)/visited"

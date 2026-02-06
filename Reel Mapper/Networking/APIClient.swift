@@ -205,7 +205,7 @@ class APIClient {
     
     func createList(name: String) async throws -> ListCreateResponse {
         let payload = CreateListRequest(name: name)
-        return try await request(.createList, body: payload)
+        return try await request(.lists, body: payload)
     }
     
     func deleteList(id: UUID) async throws {

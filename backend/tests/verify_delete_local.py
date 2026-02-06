@@ -50,6 +50,17 @@ def test_delete_endpoints():
     print(f"Response: {response_list.status_code}")
     assert response_list.status_code == 204 or response_list.status_code == 200
     
+    # 3. Test DELETE /user-restaurants/restaurant/{restaurant_id}
+    print(f"Testing DELETE /user-restaurants/restaurant/{TEST_RESTAURANT_ID}...")
+    response_del_rest = client.delete(f"/api/v1/user-restaurants/restaurant/{TEST_RESTAURANT_ID}")
+    
+    if response_del_rest.status_code == 200 or response_del_rest.status_code == 204:
+        print(f"Response: {response_del_rest.status_code}")
+    else:
+        print(f"Failed: {response_del_rest.status_code}")
+        print(response_del_rest.json())
+        sys.exit(1)
+    
     # 2. DELETE /user-restaurants/{id}
     # Note: the endpoint is defined in user_restaurants.py as DELETE /{id}
     # And router.py includes it with prefix="/user-restaurants"
