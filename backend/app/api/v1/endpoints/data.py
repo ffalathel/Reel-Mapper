@@ -33,18 +33,6 @@ async def get_home_data(
         .where(UserRestaurant.list_id == None)
         .options(selectinload(UserRestaurant.restaurant)) # Assuming relationship needed in model?
     )
-    # Wait, I didn't define relationships in SQLModel classes!
-    # I need to add Relationship attributes to SQLModel classes for `.restaurant` to work.
-    
-    # Let's fix the models first or do a join query.
-    # Relationships are cleaner.
-    
-    # For now, I will assume I need to update models.
-    # But I can also join:
-    # select(UserRestaurant, Restaurant).join(Restaurant, UserRestaurant.restaurant_id == Restaurant.id)
-    
-    # I will stick to adding Relationships to models as it's better practice.
-    # I will modify the models in next step. For now I write the endpoint assuming relationships exist.
     
     result_unsorted = await db.execute(stmt_unsorted)
     unsorted = result_unsorted.scalars().all()

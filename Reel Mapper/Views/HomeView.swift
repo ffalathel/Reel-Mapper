@@ -78,13 +78,6 @@ struct HomeView: View {
                                                 ListCardView(list: list)
                                             }
                                             .buttonStyle(PlainButtonStyle())
-                                            .contextMenu {
-                                                Button(role: .destructive, action: {
-                                                    viewModel.deleteList(list)
-                                                }) {
-                                                    Label("Delete Folder", systemImage: "trash")
-                                                }
-                                            }
                                         }
                                     }
                                     .padding(.horizontal)
@@ -121,9 +114,11 @@ struct HomeView: View {
                                         }
                                         .buttonStyle(PlainButtonStyle())
                                         .contextMenu {
-                                            Button(role: .destructive, action: {
-                                                viewModel.deleteRestaurant(restaurant)
-                                            }) {
+                                            Button(role: .destructive) {
+                                                Task {
+                                                    await viewModel.deleteRestaurant(restaurant)
+                                                }
+                                            } label: {
                                                 Label("Delete Restaurant", systemImage: "trash")
                                             }
                                         }
@@ -628,13 +623,6 @@ struct FoldersView: View {
                                 FolderRowView(folder: list)
                             }
                             .buttonStyle(PlainButtonStyle())
-                            .contextMenu {
-                                Button(role: .destructive, action: {
-                                    viewModel.deleteList(list)
-                                }) {
-                                    Label("Delete Folder", systemImage: "trash")
-                                }
-                            }
                         }
                     }
                     .padding(.horizontal)
@@ -684,6 +672,15 @@ struct FolderRowView: View {
         .padding()
         .background(Color(.systemGray6))
         .cornerRadius(12)
+        .contextMenu {
+            Button(role: .destructive) {
+                Task {
+                    await HomeViewModel.shared.deleteList(folder)
+                }
+            } label: {
+                Label("Delete Folder", systemImage: "trash")
+            }
+        }
     }
 }
 

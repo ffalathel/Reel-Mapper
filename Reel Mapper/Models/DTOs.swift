@@ -116,6 +116,3 @@ struct ListCreateResponse: Codable {
         case userId = "user_id"
     }
 }
-
-// MARK: - Generic
-struct EmptyResponse: Codable {}

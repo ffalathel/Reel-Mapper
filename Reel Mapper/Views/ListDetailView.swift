@@ -39,7 +39,16 @@ struct ListDetailView: View {
                                     await viewModel.removeRestaurant(restaurant)
                                 }
                             } label: {
-                                Label("Remove", systemImage: "trash")
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+                        .contextMenu {
+                            Button(role: .destructive) {
+                                Task {
+                                    await viewModel.removeRestaurant(restaurant)
+                                }
+                            } label: {
+                                Label("Delete Restaurant", systemImage: "trash")
                             }
                         }
                     }

@@ -205,6 +205,24 @@ class APIClient {
     
     func createList(name: String) async throws -> ListCreateResponse {
         let payload = CreateListRequest(name: name)
-        return try await request(.lists, body: payload)
+        return try await request(.createList, body: payload)
+    }
+    
+    func deleteList(id: UUID) async throws {
+        // DELETE returns 204 No Content, so we expect empty body or handle it gracefully.
+        // Our request method is generic <T: Decodable>. 
+        // We might need a requestNoResponse method OR expect a specific EmptyResponse.
+        // Quick fix: define a struct EmptyResponse: Decodable {} and use it?
+        // OR modifying request to allow Void Return.
+        // Let's assume we can ignore the return for now if we don't define generic T but specialized method.
+        // Actually the `request` method requires T: Decodable.
+        // We'll create a DummyResponse for 204.
+        let _: EmptyResponse = try await request(.deleteList(id: id))
+    }
+    
+    func deleteRestaurant(id: UUID) async throws {
+        let _: EmptyResponse = try await request(.deleteRestaurant(id: id))
     }
 }
+
+struct EmptyResponse: Decodable {}

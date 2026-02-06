@@ -18,8 +18,4 @@ class Restaurant(SQLModel, table=True):
     price_range: Optional[str] = None
     google_place_id: Optional[str] = Field(default=None, unique=True, index=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    
-    # Relationships
-    # user_restaurants: List["UserRestaurant"] = Relationship(back_populates="restaurant") 
-    # Commented out to avoid circular import complexity for now if not strictly needed for access pattern
-    # Actually, for UserRestaurant -> Restaurant loading we need it on UserRestaurant side mostly.
+

@@ -36,13 +36,13 @@ class ListDetailViewModel: ObservableObject {
         restaurants.removeAll { $0.id == restaurant.id }
         
         do {
-            try await APIClient.shared.removeFromList(listId: list.id, restaurantId: restaurant.id)
-            // Success
+            try await APIClient.shared.deleteRestaurant(id: restaurant.id)
+            print("ListDetailViewModel: Successfully deleted restaurant \(restaurant.name)")
         } catch {
-            print("Failed to remove restaurant from list: \(error)")
-            // Rollback
+            print("ListDetailViewModel: Failed to delete restaurant: \(error)")
+            // Revert on failure
             restaurants = originalRestaurants
-            errorMessage = "Failed to remove restaurant"
+            errorMessage = "Failed to delete restaurant: \(error.localizedDescription)"
         }
     }
 }

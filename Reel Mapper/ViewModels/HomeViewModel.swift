@@ -121,39 +121,35 @@ class HomeViewModel: ObservableObject {
     
     // MARK: - Deletion Actions
     
-    func deleteList(_ list: UserList) {
+    func deleteList(_ list: UserList) async {
         // Optimistic update
         let originalLists = lists
         lists.removeAll { $0.id == list.id }
         
-        Task {
-            do {
-                try await APIClient.shared.deleteList(id: list.id)
-            } catch {
-                print("Failed to delete list: \(error)")
-                await MainActor.run {
-                    lists = originalLists
-                    errorMessage = "Failed to delete folder"
-                }
-            }
+        do {
+            try await APIClient.shared.deleteList(id: list.id)
+            print("HomeViewModel: Successfully deleted list \(list.name)")
+        } catch {
+            print("HomeViewModel: Failed to delete list: \(error)")
+            // Revert on failure
+            lists = originalLists
+            errorMessage = "Failed to delete folder: \(error.localizedDescription)"
         }
     }
     
-    func deleteRestaurant(_ restaurant: Restaurant) {
-        // Optimistic update (remove from Unsorted)
+    func deleteRestaurant(_ restaurant: Restaurant) async {
+        // Optimistic update
         let originalRestaurants = unsortedRestaurants
         unsortedRestaurants.removeAll { $0.id == restaurant.id }
         
-        Task {
-            do {
-                try await APIClient.shared.deleteSavedRestaurant(restaurantId: restaurant.id)
-            } catch {
-                print("Failed to delete restaurant: \(error)")
-                await MainActor.run {
-                    unsortedRestaurants = originalRestaurants
-                    errorMessage = "Failed to delete restaurant"
-                }
-            }
+        do {
+            try await APIClient.shared.deleteRestaurant(id: restaurant.id)
+            print("HomeViewModel: Successfully deleted restaurant \(restaurant.name)")
+        } catch {
+            print("HomeViewModel: Failed to delete restaurant: \(error)")
+            // Revert on failure
+            unsortedRestaurants = originalRestaurants
+            errorMessage = "Failed to delete restaurant: \(error.localizedDescription)"
         }
     }
     
