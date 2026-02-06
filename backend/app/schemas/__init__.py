@@ -9,4 +9,5 @@ from .restaurant import (
     FavoritesListResponse, 
     VisitedListResponse
 )
+from .note import NoteUpdate, NoteRead
 
