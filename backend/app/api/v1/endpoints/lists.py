@@ -37,20 +37,10 @@ async def create_list(
 
 @router.post("/{list_id}/restaurants", response_model=schemas.UserRestaurantRead)
 async def add_restaurant_to_list(
+    list_id: str,  # UUID - path parameter
     *,
     db: AsyncSession = Depends(deps.get_db),
-    list_id: str, # UUID
-    list_id: str, # UUID
-    # TDD doesn't specify body shape, but presumably {restaurant_id: ...} 
-    # Or maybe we are moving an existing UserRestaurant to a list?
-    # TDD says: "POST /lists/{id}/restaurants".
-    # Logic: "Add restaurant to list".
-    # If the user already saved it, we update list_id? Or create new link?
-    # Constraints: (user_id, restaurant_id) unique.
-    # So a restaurant can only be in ONE list or NO list (unsorted).
-    # IF so, we update the existing UserRestaurant record.
-    # We need a body schema: `restaurant_id`.
-    body: dict, # simplistic
+    body: dict,  # simplistic
     current_user: Any = Depends(deps.get_current_user),
 ) -> Any:
     # Extract restaurant_id from body

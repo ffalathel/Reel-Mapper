@@ -20,8 +20,17 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column('user_restaurants', sa.Column('is_favorite', sa.Boolean(), server_default=sa.text('false'), nullable=False))
-    op.add_column('user_restaurants', sa.Column('is_visited', sa.Boolean(), server_default=sa.text('false'), nullable=False))
+    # Make migration idempotent - check if columns exist before adding
+    from sqlalchemy import inspect
+    conn = op.get_bind()
+    inspector = inspect(conn)
+    columns = [col['name'] for col in inspector.get_columns('user_restaurants')]
+
+    if 'is_favorite' not in columns:
+        op.add_column('user_restaurants', sa.Column('is_favorite', sa.Boolean(), server_default=sa.text('false'), nullable=False))
+
+    if 'is_visited' not in columns:
+        op.add_column('user_restaurants', sa.Column('is_visited', sa.Boolean(), server_default=sa.text('false'), nullable=False))
 
 
 def downgrade() -> None:
