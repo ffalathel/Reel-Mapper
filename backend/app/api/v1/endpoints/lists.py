@@ -1,7 +1,9 @@
 from typing import Any
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
+from sqlalchemy.orm import selectinload
 
 from app.api import deps
 from app import schemas
@@ -35,27 +37,54 @@ async def create_list(
     await db.refresh(new_list)
     return new_list
 
-@router.post("/{list_id}/restaurants", response_model=schemas.UserRestaurantRead)
-async def add_restaurant_to_list(
-    list_id: str,  # UUID - path parameter
-    *,
+@router.get("/{list_id}/restaurants", response_model=schemas.ListRestaurantsResponse)
+async def get_list_restaurants(
+    list_id: UUID,
     db: AsyncSession = Depends(deps.get_db),
-    body: dict,  # simplistic
     current_user: Any = Depends(deps.get_current_user),
 ) -> Any:
-    # Extract restaurant_id from body
-    target_rest_id = body.get("restaurant_id")
-    if not target_rest_id:
-        raise HTTPException(status_code=400, detail="restaurant_id required")
+    """
+    Get all restaurants in a specific list.
+    """
+    # First verify the list belongs to the user
+    stmt_list = select(List).where(List.id == list_id).where(List.user_id == current_user.id)
+    result_list = await db.execute(stmt_list)
+    list_item = result_list.scalar_one_or_none()
 
+    if not list_item:
+        raise HTTPException(status_code=404, detail="List not found")
+
+    # Fetch all UserRestaurant records for this list
+    stmt = (
+        select(UserRestaurant)
+        .where(UserRestaurant.user_id == current_user.id)
+        .where(UserRestaurant.list_id == list_id)
+        .options(selectinload(UserRestaurant.restaurant))
+    )
+
+    result = await db.execute(stmt)
+    restaurants = result.scalars().all()
+
+    return {"restaurants": restaurants}
+
+@router.post("/{list_id}/restaurants", response_model=schemas.UserRestaurantRead)
+async def add_restaurant_to_list(
+    list_id: UUID,
+    request: schemas.AddRestaurantToListRequest,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: Any = Depends(deps.get_current_user),
+) -> Any:
+    """
+    Add a restaurant to a list by updating the UserRestaurant's list_id.
+    """
     # Find the UserRestaurant record
-    stmt = select(UserRestaurant).where(UserRestaurant.user_id == current_user.id).where(UserRestaurant.restaurant_id == target_rest_id)
+    stmt = select(UserRestaurant).where(UserRestaurant.user_id == current_user.id).where(UserRestaurant.restaurant_id == request.restaurant_id)
     result = await db.execute(stmt)
     user_rest = result.scalar_one_or_none()
-    
+
     if not user_rest:
         raise HTTPException(status_code=404, detail="Restaurant not saved by user")
-    
+
     # Update list_id
     user_rest.list_id = list_id
     db.add(user_rest)
@@ -66,7 +95,7 @@ async def add_restaurant_to_list(
 
 @router.delete("/{list_id}", status_code=200)
 async def delete_list(
-    list_id: str,
+    list_id: UUID,
     db: AsyncSession = Depends(deps.get_db),
     current_user: Any = Depends(deps.get_current_user),
 ) -> Any:

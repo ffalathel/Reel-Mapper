@@ -12,14 +12,15 @@ enum Endpoint {
     
     // Favorites
     case toggleFavorite(restaurantId: UUID)
-    case getFavorites
-    
+    // REMOVED: getFavorites - data now comes from /home endpoint
+
     // Visited
     case toggleVisited(restaurantId: UUID)
-    case getVisited
+    // REMOVED: getVisited - data now comes from /home endpoint
     
     // List Management
     case lists
+    case getListRestaurants(listId: UUID)
     case addRestaurantToList(listId: UUID, restaurantId: UUID)
     case deleteList(id: UUID)
     
@@ -36,14 +37,13 @@ enum Endpoint {
         case .home: return "/api/v1/home"
         case .restaurant(let id): return "/api/v1/restaurants/\(id.uuidString)"
         case .lists: return "/api/v1/lists/"
+        case .getListRestaurants(let listId): return "/api/v1/lists/\(listId.uuidString)/restaurants"
         case .addRestaurantToList(let listId, _): return "/api/v1/lists/\(listId.uuidString)/restaurants"
         case .deleteList(let id): return "/api/v1/lists/\(id.uuidString)"
         case .currentUser: return "/api/v1/auth/me"
         case .deleteRestaurant(let id): return "/api/v1/user-restaurants/restaurant/\(id.uuidString)"
         case .toggleFavorite(let id): return "/api/v1/restaurants/\(id.uuidString)/favorite"
-        case .getFavorites: return "/api/v1/favorites"
         case .toggleVisited(let id): return "/api/v1/restaurants/\(id.uuidString)/visited"
-        case .getVisited: return "/api/v1/visited"
         case .saveNotes(let id): return "/api/v1/restaurants/\(id.uuidString)/notes"
         }
     }
@@ -56,7 +56,7 @@ enum Endpoint {
             return "PUT"
         case .deleteList, .deleteRestaurant:
             return "DELETE"
-        case .health, .home, .restaurant, .getFavorites, .getVisited, .currentUser:
+        case .health, .home, .restaurant, .currentUser, .getListRestaurants:
             return "GET"
         }
     }

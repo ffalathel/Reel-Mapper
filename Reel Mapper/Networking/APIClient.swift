@@ -169,24 +169,22 @@ class APIClient {
     }
     
     // MARK: - Favorites
-    
+
     func toggleFavorite(restaurantId: UUID) async throws -> FavoriteResponse {
         return try await request(.toggleFavorite(restaurantId: restaurantId))
     }
-    
-    func getFavorites() async throws -> FavoritesListResponse {
-        return try await request(.getFavorites)
-    }
-    
+
+    // REMOVED: getFavorites() - Favorites are now retrieved from /home endpoint
+    // The /home endpoint returns restaurants with is_favorite flags, eliminating the need for a separate call
+
     // MARK: - Visited
-    
+
     func toggleVisited(restaurantId: UUID) async throws -> VisitedResponse {
         return try await request(.toggleVisited(restaurantId: restaurantId))
     }
-    
-    func getVisited() async throws -> VisitedListResponse {
-        return try await request(.getVisited)
-    }
+
+    // REMOVED: getVisited() - Visited status is now retrieved from /home endpoint
+    // The /home endpoint returns restaurants with is_visited flags, eliminating the need for a separate call
     
     // MARK: - Notes
     
@@ -207,7 +205,11 @@ class APIClient {
         let payload = CreateListRequest(name: name)
         return try await request(.lists, body: payload)
     }
-    
+
+    func getListRestaurants(listId: UUID) async throws -> ListRestaurantsResponse {
+        return try await request(.getListRestaurants(listId: listId))
+    }
+
     func addRestaurantToList(listId: UUID, restaurantId: UUID) async throws {
         let payload = AddRestaurantToListRequest(restaurantId: restaurantId)
         let _: UserRestaurantResponse = try await request(.addRestaurantToList(listId: listId, restaurantId: restaurantId), body: payload)

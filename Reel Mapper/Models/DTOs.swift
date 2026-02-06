@@ -92,17 +92,21 @@ struct NotesResponse: Codable {
     let notes: String?
 }
 
+// DEPRECATED: No longer used - favorites are now retrieved from /home endpoint
+// Kept for backward compatibility only
 struct FavoritesListResponse: Codable {
     let restaurantIds: [UUID]
-    
+
     enum CodingKeys: String, CodingKey {
         case restaurantIds = "restaurant_ids"
     }
 }
 
+// DEPRECATED: No longer used - visited status is now retrieved from /home endpoint
+// Kept for backward compatibility only
 struct VisitedListResponse: Codable {
     let restaurantIds: [UUID]
-    
+
     enum CodingKeys: String, CodingKey {
         case restaurantIds = "restaurant_ids"
     }
@@ -128,8 +132,33 @@ struct ListCreateResponse: Codable {
 
 struct AddRestaurantToListRequest: Codable {
     let restaurantId: UUID
-    
+
     enum CodingKeys: String, CodingKey {
         case restaurantId = "restaurant_id"
+    }
+}
+
+struct ListRestaurantsResponse: Codable {
+    let restaurants: [Restaurant]
+
+    // Custom decoder to handle nested restaurant objects from backend
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // Backend returns array of {id, restaurant: {...}, is_favorite, is_visited, created_at}
+        // We need to extract just the restaurant objects
+        let userRestaurants = try container.decode([UserRestaurantResponse].self, forKey: .restaurants)
+        restaurants = userRestaurants.map {
+            var r = $0.restaurant
+            r.isFavorite = $0.isFavorite
+            r.isVisited = $0.isVisited
+            return r
+        }
+    }
+
+    // Standard encoder for completeness
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(restaurants, forKey: .restaurants)
     }
 }

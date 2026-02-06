@@ -20,29 +20,28 @@ class FavoritesManager: ObservableObject {
     }
     
     // MARK: - Backend Sync
-    
+
+    /// Sync favorites and visited from restaurant data (called by HomeViewModel after fetching)
+    func syncFromRestaurants(_ restaurants: [Restaurant]) {
+        // Extract favorites and visited from restaurant objects
+        let newFavorites = Set(restaurants.filter { $0.isFavorite == true }.map { $0.id })
+        let newVisited = Set(restaurants.filter { $0.isVisited == true }.map { $0.id })
+
+        favoriteRestaurantIds = newFavorites
+        visitedRestaurantIds = newVisited
+
+        saveToUserDefaults()
+
+        print("FavoritesManager: Synced \(favoriteRestaurantIds.count) favorites and \(visitedRestaurantIds.count) visited from restaurants")
+    }
+
+    /// DEPRECATED: Use syncFromRestaurants() instead
     /// Load favorites and visited from backend on app launch
+    @available(*, deprecated, message: "Use syncFromRestaurants() instead - data now comes from /home endpoint")
     func loadFromBackend() async {
-        isLoading = true
-        errorMessage = nil
-        
-        do {
-            async let favoritesResponse = apiClient.getFavorites()
-            async let visitedResponse = apiClient.getVisited()
-            
-            let (favorites, visited) = try await (favoritesResponse, visitedResponse)
-            
-            favoriteRestaurantIds = Set(favorites.restaurantIds)
-            visitedRestaurantIds = Set(visited.restaurantIds)
-            
-            saveToUserDefaults()
-        } catch {
-            // On error, keep using local cache
-            print("Failed to load from backend: \(error)")
-            errorMessage = "Failed to sync with server"
-        }
-        
-        isLoading = false
+        // This method is deprecated and does nothing
+        // Favorites/visited are now synced from /home endpoint via syncFromRestaurants()
+        print("FavoritesManager: loadFromBackend() is deprecated, data synced from /home instead")
     }
     
     // MARK: - Favorites

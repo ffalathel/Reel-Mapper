@@ -1,4 +1,5 @@
 from typing import Any
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
@@ -10,7 +11,7 @@ router = APIRouter()
 
 @router.delete("/{id}")
 async def delete_user_restaurant(
-    id: str,
+    id: UUID,
     db: AsyncSession = Depends(deps.get_db),
     current_user: Any = Depends(deps.get_current_user),
 ):
@@ -31,7 +32,7 @@ async def delete_user_restaurant(
 
 @router.delete("/restaurant/{restaurant_id}")
 async def delete_user_restaurant_by_rid(
-    restaurant_id: str,
+    restaurant_id: UUID,
     db: AsyncSession = Depends(deps.get_db),
     current_user: Any = Depends(deps.get_current_user),
 ):

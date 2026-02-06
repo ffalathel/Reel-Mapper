@@ -103,5 +103,8 @@ struct ListDetailView: View {
         .task {
             await viewModel.fetchRestaurants()
         }
+        .refreshable {
+            await viewModel.fetchRestaurants()
+        }
     }
 }

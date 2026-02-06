@@ -15,18 +15,16 @@ class ListDetailViewModel: ObservableObject {
     func fetchRestaurants() async {
         isLoading = true
         errorMessage = nil
-        
-        // For now, we'll filter from the home data since we don't have a dedicated endpoint
-        // In production, this would call GET /lists/{id}/restaurants
+
         do {
-            _ = try await APIClient.shared.getHome()
-            // This is a simplified approach - in reality we'd need a proper endpoint
-            // For now, we'll just show empty or mock data
-            restaurants = []
+            let response = try await APIClient.shared.getListRestaurants(listId: list.id)
+            restaurants = response.restaurants
+            print("ListDetailViewModel: Loaded \(restaurants.count) restaurants for list \(list.name)")
         } catch {
+            print("ListDetailViewModel: Failed to load restaurants: \(error)")
             errorMessage = "Failed to load restaurants: \(error.localizedDescription)"
         }
-        
+
         isLoading = false
     }
     

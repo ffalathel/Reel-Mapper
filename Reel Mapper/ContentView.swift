@@ -12,10 +12,9 @@ struct ContentView: View {
                 // User is signed in - show main app
                 HomeView()
                     .task {
-                        // Load favorites and visited from backend on app launch
-                        await favoritesManager.loadFromBackend()
                         // Store token for Share Extension
                         await AuthManager.shared.storeTokenForExtension()
+                        // Note: Favorites/visited are now synced automatically when HomeView fetches data
                     }
             } else {
                 // User is signed out - show sign in prompt

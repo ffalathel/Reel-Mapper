@@ -21,3 +21,9 @@ class ListRead(ListBase):
 class HomeResponse(BaseModel):
     lists: List[ListRead]
     unsorted_restaurants: List[UserRestaurantRead]
+
+class ListRestaurantsResponse(BaseModel):
+    restaurants: List[UserRestaurantRead]
+
+class AddRestaurantToListRequest(BaseModel):
+    restaurant_id: UUID

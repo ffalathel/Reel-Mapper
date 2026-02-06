@@ -1,4 +1,5 @@
 from typing import Any
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
@@ -6,15 +7,14 @@ from sqlmodel import select
 from app.api import deps
 from app import schemas
 from app.models.restaurant import Restaurant
-from app.models.list import List
-from app.models.save_event import UserRestaurant, SaveEvent, SaveEventStatus
+from app.models.save_event import UserRestaurant
 from app.models.note import Note
 
 router = APIRouter()
 
 @router.get("/{restaurant_id}", response_model=schemas.RestaurantRead)
 async def get_restaurant(
-    restaurant_id: str,
+    restaurant_id: UUID,
     db: AsyncSession = Depends(deps.get_db),
     current_user: Any = Depends(deps.get_current_user),
 ) -> Any:
@@ -25,23 +25,9 @@ async def get_restaurant(
         raise HTTPException(status_code=404, detail="Restaurant not found")
     return restaurant
 
-# --- Shared helper for Favorite/Visited ---
-async def _get_or_create_special_list(db: AsyncSession, user_id: Any, list_name: str) -> List:
-    stmt = select(List).where(List.user_id == user_id).where(List.name == list_name)
-    result = await db.execute(stmt)
-    special_list = result.scalar_one_or_none()
-    
-    if not special_list:
-        special_list = List(user_id=user_id, name=list_name)
-        db.add(special_list)
-        await db.commit()
-        await db.refresh(special_list)
-        
-    return special_list
-
 @router.post("/{restaurant_id}/favorite", response_model=schemas.FavoriteResponse)
 async def toggle_favorite(
-    restaurant_id: str,
+    restaurant_id: UUID,
     db: AsyncSession = Depends(deps.get_db),
     current_user: Any = Depends(deps.get_current_user),
 ) -> Any:
@@ -53,7 +39,7 @@ async def toggle_favorite(
     )
     result = await db.execute(stmt)
     existing = result.scalar_one_or_none()
-    
+
     if existing:
         existing.is_favorite = not existing.is_favorite
         db.add(existing)
@@ -61,32 +47,15 @@ async def toggle_favorite(
         await db.refresh(existing)
         return {"is_favorite": existing.is_favorite}
     else:
-        # Create new entry (Unsorted)
-        dummy_event = SaveEvent(
-            user_id=current_user.id,
-            source="manual_toggle",
-            source_url="",
-            status=SaveEventStatus.COMPLETE.value,
-            target_list_id=None # Unsorted
+        # Restaurant not saved by user
+        raise HTTPException(
+            status_code=404,
+            detail="Restaurant not saved by user"
         )
-        db.add(dummy_event)
-        await db.commit()
-        await db.refresh(dummy_event)
-        
-        new_item = UserRestaurant(
-            user_id=current_user.id,
-            restaurant_id=restaurant_id,
-            list_id=None, # Unsorted
-            source_event_id=dummy_event.id,
-            is_favorite=True
-        )
-        db.add(new_item)
-        await db.commit()
-        return {"is_favorite": True}
 
 @router.post("/{restaurant_id}/visited", response_model=schemas.VisitedResponse)
 async def toggle_visited(
-    restaurant_id: str,
+    restaurant_id: UUID,
     db: AsyncSession = Depends(deps.get_db),
     current_user: Any = Depends(deps.get_current_user),
 ) -> Any:
@@ -98,7 +67,7 @@ async def toggle_visited(
     )
     result = await db.execute(stmt)
     existing = result.scalar_one_or_none()
-    
+
     if existing:
         existing.is_visited = not existing.is_visited
         db.add(existing)
@@ -106,32 +75,15 @@ async def toggle_visited(
         await db.refresh(existing)
         return {"is_visited": existing.is_visited}
     else:
-        # Create new entry (Unsorted)
-        dummy_event = SaveEvent(
-            user_id=current_user.id,
-            source="manual_toggle",
-            source_url="",
-            status=SaveEventStatus.COMPLETE.value,
-            target_list_id=None # Unsorted
+        # Restaurant not saved by user
+        raise HTTPException(
+            status_code=404,
+            detail="Restaurant not saved by user"
         )
-        db.add(dummy_event)
-        await db.commit()
-        await db.refresh(dummy_event)
-        
-        new_item = UserRestaurant(
-            user_id=current_user.id,
-            restaurant_id=restaurant_id,
-            list_id=None, # Unsorted
-            source_event_id=dummy_event.id,
-            is_visited=True
-        )
-        db.add(new_item)
-        await db.commit()
-        return {"is_visited": True}
 
 @router.put("/{restaurant_id}/notes")
 async def save_notes(
-    restaurant_id: str,
+    restaurant_id: UUID,
     note_data: schemas.NoteUpdate = Body(...),
     db: AsyncSession = Depends(deps.get_db),
     current_user: Any = Depends(deps.get_current_user),

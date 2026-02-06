@@ -351,19 +351,19 @@ struct RestaurantDetailView: View {
     }
     
     private func openInGoogleMaps() {
-        guard let placeId = restaurant.googlePlaceId else {
-            // Fallback to coordinates
-            let url = URL(string: "https://www.google.com/maps/search/?api=1&query=\(restaurant.latitude),\(restaurant.longitude)")!
-            UIApplication.shared.open(url)
-            return
-        }
-        
-        let googleMapsURL = URL(string: "comgooglemaps://?q=place_id:\(placeId)")!
-        
-        if UIApplication.shared.canOpenURL(googleMapsURL) {
-            UIApplication.shared.open(googleMapsURL)
+        // Build search query from restaurant name + city
+        let searchQuery = "\(restaurant.name), \(restaurant.city)"
+            .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+
+        // Try Google Maps app first
+        let googleMapsAppURL = URL(string: "comgooglemaps://?q=\(searchQuery)")!
+
+        if UIApplication.shared.canOpenURL(googleMapsAppURL) {
+            // User has Google Maps app installed
+            UIApplication.shared.open(googleMapsAppURL)
         } else {
-            let webURL = URL(string: "https://www.google.com/maps/search/?api=1&query_place_id=\(placeId)")!
+            // Fall back to web version
+            let webURL = URL(string: "https://www.google.com/maps/search/?api=1&query=\(searchQuery)")!
             UIApplication.shared.open(webURL)
         }
     }
