@@ -45,12 +45,9 @@ async def toggle_favorite(
     db: AsyncSession = Depends(deps.get_db),
     current_user: Any = Depends(deps.get_current_user),
 ) -> Any:
-    fav_list = await _get_or_create_special_list(db, current_user.id, "Favorites")
-    
     # Check if exists
     stmt = (
         select(UserRestaurant)
-        .where(UserRestaurant.list_id == fav_list.id)
         .where(UserRestaurant.restaurant_id == restaurant_id)
         .where(UserRestaurant.user_id == current_user.id)
     )
@@ -58,16 +55,19 @@ async def toggle_favorite(
     existing = result.scalar_one_or_none()
     
     if existing:
-        await db.delete(existing)
+        existing.is_favorite = not existing.is_favorite
+        db.add(existing)
         await db.commit()
-        return {"is_favorite": False}
+        await db.refresh(existing)
+        return {"is_favorite": existing.is_favorite}
     else:
+        # Create new entry (Unsorted)
         dummy_event = SaveEvent(
             user_id=current_user.id,
             source="manual_toggle",
             source_url="",
             status=SaveEventStatus.COMPLETE.value,
-            target_list_id=fav_list.id
+            target_list_id=None # Unsorted
         )
         db.add(dummy_event)
         await db.commit()
@@ -76,8 +76,9 @@ async def toggle_favorite(
         new_item = UserRestaurant(
             user_id=current_user.id,
             restaurant_id=restaurant_id,
-            list_id=fav_list.id,
-            source_event_id=dummy_event.id 
+            list_id=None, # Unsorted
+            source_event_id=dummy_event.id,
+            is_favorite=True
         )
         db.add(new_item)
         await db.commit()
@@ -89,11 +90,9 @@ async def toggle_visited(
     db: AsyncSession = Depends(deps.get_db),
     current_user: Any = Depends(deps.get_current_user),
 ) -> Any:
-    vis_list = await _get_or_create_special_list(db, current_user.id, "Visited")
-    
+    # Check if exists
     stmt = (
         select(UserRestaurant)
-        .where(UserRestaurant.list_id == vis_list.id)
         .where(UserRestaurant.restaurant_id == restaurant_id)
         .where(UserRestaurant.user_id == current_user.id)
     )
@@ -101,16 +100,19 @@ async def toggle_visited(
     existing = result.scalar_one_or_none()
     
     if existing:
-        await db.delete(existing)
+        existing.is_visited = not existing.is_visited
+        db.add(existing)
         await db.commit()
-        return {"is_visited": False}
+        await db.refresh(existing)
+        return {"is_visited": existing.is_visited}
     else:
+        # Create new entry (Unsorted)
         dummy_event = SaveEvent(
             user_id=current_user.id,
             source="manual_toggle",
             source_url="",
             status=SaveEventStatus.COMPLETE.value,
-            target_list_id=vis_list.id
+            target_list_id=None # Unsorted
         )
         db.add(dummy_event)
         await db.commit()
@@ -119,8 +121,9 @@ async def toggle_visited(
         new_item = UserRestaurant(
             user_id=current_user.id,
             restaurant_id=restaurant_id,
-            list_id=vis_list.id,
-            source_event_id=dummy_event.id
+            list_id=None, # Unsorted
+            source_event_id=dummy_event.id,
+            is_visited=True
         )
         db.add(new_item)
         await db.commit()

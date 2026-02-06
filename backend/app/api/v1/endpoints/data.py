@@ -50,17 +50,13 @@ async def get_favorites(
     db: AsyncSession = Depends(deps.get_db),
     current_user: Any = Depends(deps.get_current_user),
 ) -> Any:
-    # Find "Favorites" list
-    stmt = select(List).where(List.user_id == current_user.id).where(List.name == "Favorites")
+    stmt = (
+        select(UserRestaurant.restaurant_id)
+        .where(UserRestaurant.user_id == current_user.id)
+        .where(UserRestaurant.is_favorite == True)
+    )
     result = await db.execute(stmt)
-    fav_list = result.scalar_one_or_none()
-    
-    restaurant_ids = []
-    if fav_list:
-        stmt_items = select(UserRestaurant).where(UserRestaurant.list_id == fav_list.id)
-        result_items = await db.execute(stmt_items)
-        items = result_items.scalars().all()
-        restaurant_ids = [item.restaurant_id for item in items]
+    restaurant_ids = result.scalars().all()
         
     return {"restaurant_ids": restaurant_ids}
 
@@ -69,17 +65,13 @@ async def get_visited(
     db: AsyncSession = Depends(deps.get_db),
     current_user: Any = Depends(deps.get_current_user),
 ) -> Any:
-    # Find "Visited" list
-    stmt = select(List).where(List.user_id == current_user.id).where(List.name == "Visited")
+    stmt = (
+        select(UserRestaurant.restaurant_id)
+        .where(UserRestaurant.user_id == current_user.id)
+        .where(UserRestaurant.is_visited == True)
+    )
     result = await db.execute(stmt)
-    vis_list = result.scalar_one_or_none()
-    
-    restaurant_ids = []
-    if vis_list:
-        stmt_items = select(UserRestaurant).where(UserRestaurant.list_id == vis_list.id)
-        result_items = await db.execute(stmt_items)
-        items = result_items.scalars().all()
-        restaurant_ids = [item.restaurant_id for item in items]
+    restaurant_ids = result.scalars().all()
         
     return {"restaurant_ids": restaurant_ids}
 

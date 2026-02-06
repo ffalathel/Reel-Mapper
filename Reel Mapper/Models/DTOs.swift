@@ -21,10 +21,14 @@ struct CreateSaveEventResponse: Codable {
 struct UserRestaurantResponse: Codable {
     let id: UUID
     let restaurant: Restaurant
+    let isFavorite: Bool
+    let isVisited: Bool
     let createdAt: String?
     
     enum CodingKeys: String, CodingKey {
         case id, restaurant
+        case isFavorite = "is_favorite"
+        case isVisited = "is_visited"
         case createdAt = "created_at"
     }
 }
@@ -46,7 +50,12 @@ struct HomeResponse: Codable {
         // Backend returns array of {id, restaurant: {...}, created_at}
         // We need to extract just the restaurant objects
         let userRestaurants = try container.decode([UserRestaurantResponse].self, forKey: .unsortedRestaurants)
-        unsortedRestaurants = userRestaurants.map { $0.restaurant }
+        unsortedRestaurants = userRestaurants.map { 
+            var r = $0.restaurant
+            r.isFavorite = $0.isFavorite
+            r.isVisited = $0.isVisited
+            return r
+        }
     }
     
     // Standard encoder for completeness

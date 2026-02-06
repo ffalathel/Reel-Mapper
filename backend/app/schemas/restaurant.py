@@ -20,6 +20,8 @@ class RestaurantRead(RestaurantBase):
 class UserRestaurantRead(BaseModel):
     id: UUID
     restaurant: RestaurantRead
+    is_favorite: bool
+    is_visited: bool
     created_at: datetime
     
     class Config:

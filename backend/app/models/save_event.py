@@ -18,6 +18,8 @@ class UserRestaurant(SQLModel, table=True):
     restaurant_id: uuid.UUID = Field(foreign_key="restaurants.id")
     list_id: Optional[uuid.UUID] = Field(default=None, foreign_key="lists.id")
     source_event_id: uuid.UUID = Field(foreign_key="save_events.id")
+    is_favorite: bool = Field(default=False)
+    is_visited: bool = Field(default=False)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     
     restaurant: "Restaurant" = Relationship(sa_relationship_kwargs={"lazy": "selectin"})
