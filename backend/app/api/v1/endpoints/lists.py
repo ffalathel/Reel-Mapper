@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 from app.api import deps
 from app import schemas
 from app.models.list import List
-from app.models.save_event import UserRestaurant, SaveEvent
+from app.models.save_event import UserRestaurant
 
 router = APIRouter()
 
@@ -126,7 +126,13 @@ async def delete_list(
     db: AsyncSession = Depends(deps.get_db),
     current_user: Any = Depends(deps.get_current_user),
 ) -> Any:
-    """Delete a list. Moves contained restaurants to Unsorted."""
+    """
+    Delete a list.
+
+    Database CASCADE behavior automatically:
+    - SET NULL on UserRestaurant.list_id (restaurants move to Unsorted)
+    - SET NULL on SaveEvent.target_list_id (preserve history)
+    """
     stmt = select(List).where(List.id == list_id, List.user_id == current_user.id)
     result = await db.execute(stmt)
     list_item = result.scalar_one_or_none()
@@ -135,38 +141,9 @@ async def delete_list(
         raise HTTPException(status_code=404, detail="List not found")
 
     try:
-        # Move restaurants to Unsorted
-        stmt_items = select(UserRestaurant).where(
-            UserRestaurant.list_id == list_id,
-            UserRestaurant.user_id == current_user.id,
-        )
-        result_items = await db.execute(stmt_items)
-        items = result_items.scalars().all()
-
-        for item in items:
-            item.list_id = None
-            db.add(item)
-
-        # Unlink SaveEvent history
-        stmt_events = select(SaveEvent).where(
-            SaveEvent.target_list_id == list_id,
-            SaveEvent.user_id == current_user.id,
-        )
-        result_events = await db.execute(stmt_events)
-        events = result_events.scalars().all()
-
-        for event in events:
-            event.target_list_id = None
-            db.add(event)
-
         await db.delete(list_item)
         await db.commit()
-
-        logger.info(
-            f"Deleted list {list_id} for user {current_user.id}. "
-            f"Moved {len(items)} restaurants to unsorted, "
-            f"unlinked {len(events)} save events."
-        )
+        logger.info(f"Deleted list {list_id} for user {current_user.id}")
     except Exception as e:
         await db.rollback()
         logger.error(f"Failed to delete list {list_id}: {e}", exc_info=True)

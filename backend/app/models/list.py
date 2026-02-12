@@ -1,6 +1,8 @@
 import uuid
 from datetime import datetime
 from sqlmodel import Field, SQLModel
+from sqlalchemy import Column, ForeignKey as SA_ForeignKey
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 
 class List(SQLModel, table=True):
     __tablename__ = "lists"
@@ -9,6 +11,11 @@ class List(SQLModel, table=True):
     # Application layer also validates via func.lower() for clear error messages
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    user_id: uuid.UUID = Field(foreign_key="users.id")
+
+    # CASCADE: User deletion removes their lists
+    user_id: uuid.UUID = Field(
+        sa_column=Column(PG_UUID(as_uuid=True), SA_ForeignKey("users.id", ondelete="CASCADE"))
+    )
+
     name: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
