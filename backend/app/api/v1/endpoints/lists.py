@@ -1,9 +1,14 @@
+import logging
 from typing import Any
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func
 from sqlmodel import select
 from sqlalchemy.orm import selectinload
+
+logger = logging.getLogger(__name__)
 
 from app.api import deps
 from app import schemas
@@ -22,19 +27,35 @@ async def create_list(
     """
     Create a new list.
     """
-    # Check for duplicate name for user
-    stmt = select(List).where(List.user_id == current_user.id).where(List.name == list_in.name)
+    # Normalize and strip whitespace
+    list_name = list_in.name.strip()
+
+    # Check for duplicate name for user (case-insensitive)
+    stmt = select(List).where(
+        List.user_id == current_user.id
+    ).where(
+        func.lower(List.name) == func.lower(list_name)
+    )
     existing = await db.execute(stmt)
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="List with this name already exists")
 
     new_list = List(
         user_id=current_user.id,
-        name=list_in.name
+        name=list_name  # Use normalized version
     )
-    db.add(new_list)
-    await db.commit()
-    await db.refresh(new_list)
+
+    try:
+        db.add(new_list)
+        await db.commit()
+        await db.refresh(new_list)
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="List with this name already exists"
+        )
+
     return new_list
 
 @router.get("/{list_id}/restaurants", response_model=schemas.ListRestaurantsResponse)
@@ -77,6 +98,12 @@ async def add_restaurant_to_list(
     """
     Add a restaurant to a list by updating the UserRestaurant's list_id.
     """
+    # Verify the target list belongs to the current user
+    stmt_list = select(List).where(List.id == list_id, List.user_id == current_user.id)
+    result_list = await db.execute(stmt_list)
+    if not result_list.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="List not found")
+
     # Find the UserRestaurant record
     stmt = select(UserRestaurant).where(UserRestaurant.user_id == current_user.id).where(UserRestaurant.restaurant_id == request.restaurant_id)
     result = await db.execute(stmt)
@@ -99,40 +126,53 @@ async def delete_list(
     db: AsyncSession = Depends(deps.get_db),
     current_user: Any = Depends(deps.get_current_user),
 ) -> Any:
-    """
-    Delete a list.
-    """
-    stmt = select(List).where(List.id == list_id).where(List.user_id == current_user.id)
+    """Delete a list. Moves contained restaurants to Unsorted."""
+    stmt = select(List).where(List.id == list_id, List.user_id == current_user.id)
     result = await db.execute(stmt)
     list_item = result.scalar_one_or_none()
-    
+
     if not list_item:
         raise HTTPException(status_code=404, detail="List not found")
-        
-    # Optional: Delete associated UserRestaurants inside this list?
-    # Or just set their list_id to NULL (unsorted)?
-    # For now, let's just delete the list.
-    # If we have CASCADE delete in DB, items might be deleted. 
-    # If not, we should probably set them to unsorted or delete them.
-    # Let's set them to NULL (Unsorted) so the user doesn't lose the restaurant.
-    
-    stmt_items = select(UserRestaurant).where(UserRestaurant.list_id == list_id)
-    result_items = await db.execute(stmt_items)
-    items = result_items.scalars().all()
-    
-    for item in items:
-        item.list_id = None
-        db.add(item)
-        
-    # Also clean up any SaveEvents referencing this list
-    stmt_events = select(SaveEvent).where(SaveEvent.target_list_id == list_id)
-    result_events = await db.execute(stmt_events)
-    events = result_events.scalars().all()
-    
-    for event in events:
-        event.target_list_id = None
-        db.add(event)
-        
-    await db.delete(list_item)
-    await db.commit()
+
+    try:
+        # Move restaurants to Unsorted
+        stmt_items = select(UserRestaurant).where(
+            UserRestaurant.list_id == list_id,
+            UserRestaurant.user_id == current_user.id,
+        )
+        result_items = await db.execute(stmt_items)
+        items = result_items.scalars().all()
+
+        for item in items:
+            item.list_id = None
+            db.add(item)
+
+        # Unlink SaveEvent history
+        stmt_events = select(SaveEvent).where(
+            SaveEvent.target_list_id == list_id,
+            SaveEvent.user_id == current_user.id,
+        )
+        result_events = await db.execute(stmt_events)
+        events = result_events.scalars().all()
+
+        for event in events:
+            event.target_list_id = None
+            db.add(event)
+
+        await db.delete(list_item)
+        await db.commit()
+
+        logger.info(
+            f"Deleted list {list_id} for user {current_user.id}. "
+            f"Moved {len(items)} restaurants to unsorted, "
+            f"unlinked {len(events)} save events."
+        )
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"Failed to delete list {list_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to delete list. Please try again.",
+        )
+
     return None
