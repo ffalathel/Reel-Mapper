@@ -9,6 +9,7 @@ from app import schemas
 from app.models.restaurant import Restaurant
 from app.models.save_event import UserRestaurant
 from app.models.note import Note
+from app.errors import ErrorMessages
 
 router = APIRouter()
 
@@ -71,7 +72,7 @@ async def get_restaurant(
     result = await db.execute(stmt)
     restaurant = result.scalar_one_or_none()
     if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
+        raise HTTPException(status_code=404, detail=ErrorMessages.RESOURCE_RESTAURANT_NOT_FOUND)
     return restaurant
 
 @router.post("/{restaurant_id}/favorite", response_model=schemas.FavoriteResponse)

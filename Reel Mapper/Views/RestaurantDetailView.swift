@@ -12,7 +12,8 @@ struct RestaurantDetailView: View {
     // Generate seeded data
     private var heroImageURL: URL {
         let seed = abs(restaurant.id.hashValue)
-        return URL(string: "https://picsum.photos/seed/\(seed)/800/600")!
+        return URL(string: "https://picsum.photos/seed/\(seed)/800/600")
+            ?? URL(string: "https://picsum.photos/800/600")!
     }
     
     private var rating: Double {
@@ -38,8 +39,8 @@ struct RestaurantDetailView: View {
     
     private var photoURLs: [URL] {
         let seed = abs(restaurant.id.hashValue)
-        return (0..<23).map { index in
-            URL(string: "https://picsum.photos/seed/\(seed + index)/400/400")!
+        return (0..<23).compactMap { index in
+            URL(string: "https://picsum.photos/seed/\(seed + index)/400/400")
         }
     }
     
@@ -356,14 +357,12 @@ struct RestaurantDetailView: View {
             .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
 
         // Try Google Maps app first
-        let googleMapsAppURL = URL(string: "comgooglemaps://?q=\(searchQuery)")!
-
-        if UIApplication.shared.canOpenURL(googleMapsAppURL) {
+        if let googleMapsAppURL = URL(string: "comgooglemaps://?q=\(searchQuery)"),
+           UIApplication.shared.canOpenURL(googleMapsAppURL) {
             // User has Google Maps app installed
             UIApplication.shared.open(googleMapsAppURL)
-        } else {
+        } else if let webURL = URL(string: "https://www.google.com/maps/search/?api=1&query=\(searchQuery)") {
             // Fall back to web version
-            let webURL = URL(string: "https://www.google.com/maps/search/?api=1&query=\(searchQuery)")!
             UIApplication.shared.open(webURL)
         }
     }
@@ -392,9 +391,9 @@ struct RestaurantDetailView: View {
         
         do {
             _ = try await APIClient.shared.saveNotes(restaurantId: restaurant.id, notes: notesText)
-            print("Notes saved successfully")
+            AppLogger.info("Notes saved successfully", category: .data)
         } catch {
-            print("Failed to save notes: \(error)")
+            AppLogger.error("Failed to save notes: \(error)", category: .data)
             // Could show an error alert here if needed
         }
         

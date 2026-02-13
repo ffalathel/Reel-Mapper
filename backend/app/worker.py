@@ -1,11 +1,14 @@
 import os
 import time
+import logging
 from celery import Celery
 from sqlmodel import Session, create_engine, select
 from app.core.config import settings
 from app.models.save_event import SaveEvent, SaveEventStatus, UserRestaurant
 from app.models.restaurant import Restaurant
 from app.models.list import List
+
+logger = logging.getLogger(__name__)
 
 # Setup Sync DB
 # DATABASE_URL is "postgresql+asyncpg://..."
@@ -29,7 +32,7 @@ def extract_info(save_event_id: str):
         # 1. Fetch Save Event
         save_event = session.get(SaveEvent, save_event_id)
         if not save_event:
-            print(f"SaveEvent {save_event_id} not found")
+            logger.error(f"SaveEvent {save_event_id} not found")
             return
 
         save_event.status = SaveEventStatus.PROCESSING.value
@@ -88,12 +91,12 @@ def finalize_save(session: Session, save_event: SaveEvent, restaurant: Restauran
 
     if existing:
         # Duplicate detected - mark SaveEvent as complete with note
-        print(f"Duplicate detected: user {save_event.user_id}, restaurant {restaurant.id}")
+        logger.info(f"Duplicate detected: user {save_event.user_id}, restaurant {restaurant.id}")
         save_event.status = SaveEventStatus.COMPLETE.value
         save_event.error_message = "Restaurant already saved"
         session.add(save_event)
         session.commit()
-        print(f"Marked SaveEvent {save_event.id} as complete (duplicate)")
+        logger.info(f"Marked SaveEvent {save_event.id} as complete (duplicate)")
         return
 
     # Not a duplicate - create new UserRestaurant
@@ -109,4 +112,4 @@ def finalize_save(session: Session, save_event: SaveEvent, restaurant: Restauran
     save_event.status = SaveEventStatus.COMPLETE.value
     session.add(save_event)
     session.commit()
-    print(f"Finished processing save_event {save_event.id}")
+    logger.debug(f"Finished processing save_event {save_event.id}")

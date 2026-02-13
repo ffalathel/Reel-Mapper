@@ -21,7 +21,7 @@ class AppState: ObservableObject {
             try await AuthManager.shared.signOut()
             isAuthenticated = false
         } catch {
-            print("AppState: Failed to sign out: \(error)")
+            AppLogger.error("Failed to sign out: \(error)", category: .auth)
         }
     }
 }

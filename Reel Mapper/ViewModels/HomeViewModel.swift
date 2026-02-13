@@ -14,7 +14,7 @@ class HomeViewModel: ObservableObject {
     private var pollingTask: Task<Void, Never>?
     
     func fetchHome(silent: Bool = false) async {
-        print("DEBUG HomeViewModel: fetchHome called (silent: \(silent))")
+        AppLogger.debug("fetchHome called (silent: \(silent))", category: .data)
 
         isLoading = true
         if !silent {
@@ -22,9 +22,9 @@ class HomeViewModel: ObservableObject {
         }
         
         do {
-            print("DEBUG HomeViewModel: Calling getHome API...")
+            AppLogger.debug("Calling getHome API...", category: .data)
             let response = try await APIClient.shared.getHome()
-            print("DEBUG HomeViewModel: Got \(response.lists.count) lists and \(response.unsortedRestaurants.count) restaurants")
+            AppLogger.info("Got \(response.lists.count) lists and \(response.unsortedRestaurants.count) restaurants", category: .data)
             lists = response.lists
             unsortedRestaurants = response.unsortedRestaurants
 
@@ -35,7 +35,7 @@ class HomeViewModel: ObservableObject {
             errorMessage = nil
         } catch APIError.unauthorized {
             // Token is invalid/expired - force sign out silently
-            print("HomeViewModel: 401 Unauthorized - Signing out")
+            AppLogger.warning("401 Unauthorized - Signing out", category: .auth)
             Task {
                 try? await AuthManager.shared.signOut()
             }
@@ -44,7 +44,7 @@ class HomeViewModel: ObservableObject {
             unsortedRestaurants = []
             // Don't set errorMessage - this is expected for unauthenticated users
         } catch {
-            print("DEBUG HomeViewModel: fetchHome failed with error: \(error)")
+            AppLogger.error("fetchHome failed with error: \(error)", category: .data)
             // Only show error message if not silent (i.e., not from polling)
             if !silent {
                 errorMessage = "Failed to load home: \(error.localizedDescription)"
@@ -52,12 +52,12 @@ class HomeViewModel: ObservableObject {
         }
         
         isLoading = false
-        print("DEBUG HomeViewModel: fetchHome completed, isLoading=false")
+        AppLogger.debug("fetchHome completed, isLoading=false", category: .data)
     }
     
     func startPolling() {
         // TEMPORARILY DISABLED - Polling causes timeouts
-        print("DEBUG HomeViewModel: Polling disabled")
+        AppLogger.debug("Polling disabled", category: .data)
         return
     }
     
@@ -75,9 +75,9 @@ class HomeViewModel: ObservableObject {
         
         do {
             try await APIClient.shared.deleteList(id: list.id)
-            print("HomeViewModel: Successfully deleted list \(list.name)")
+            AppLogger.info("Successfully deleted list \(list.name)", category: .data)
         } catch {
-            print("HomeViewModel: Failed to delete list: \(error)")
+            AppLogger.error("Failed to delete list: \(error)", category: .data)
             // Revert on failure
             lists = originalLists
             errorMessage = "Failed to delete folder: \(error.localizedDescription)"
@@ -91,9 +91,9 @@ class HomeViewModel: ObservableObject {
         
         do {
             try await APIClient.shared.deleteRestaurant(id: restaurant.id)
-            print("HomeViewModel: Successfully deleted restaurant \(restaurant.name)")
+            AppLogger.info("Successfully deleted restaurant \(restaurant.name)", category: .data)
         } catch {
-            print("HomeViewModel: Failed to delete restaurant: \(error)")
+            AppLogger.error("Failed to delete restaurant: \(error)", category: .data)
             // Revert on failure
             unsortedRestaurants = originalRestaurants
             errorMessage = "Failed to delete restaurant: \(error.localizedDescription)"
@@ -112,11 +112,11 @@ class HomeViewModel: ObservableObject {
         
         do {
             try await APIClient.shared.addRestaurantToList(listId: list.id, restaurantId: restaurant.id)
-            print("HomeViewModel: Successfully moved \(restaurant.name) to \(list.name)")
+            AppLogger.info("Successfully moved \(restaurant.name) to \(list.name)", category: .data)
             // Refresh home to ensure consistent state (especially if moving FROM another list)
             await fetchHome(silent: true)
         } catch {
-            print("HomeViewModel: Failed to move restaurant: \(error)")
+            AppLogger.error("Failed to move restaurant: \(error)", category: .data)
             // Revert
             unsortedRestaurants = originalRestaurants
             errorMessage = "Failed to move restaurant to folder: \(error.localizedDescription)"

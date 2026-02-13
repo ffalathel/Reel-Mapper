@@ -27,20 +27,20 @@ class AuthManager {
     /// Returns nil if not signed in
     func getToken() async -> String? {
         guard let session = Clerk.shared.session else {
-            print("DEBUG AuthManager: No active session")
+            AppLogger.debug("No active session", category: .auth)
             return nil
         }
         
         do {
             // getToken returns TokenResource? - need to unwrap
             if let tokenResource = try await session.getToken() {
-                print("DEBUG AuthManager: Retrieved token from Clerk: \(tokenResource.jwt.prefix(20))...")
+                AppLogger.debugSensitive("Retrieved token from Clerk: \(tokenResource.jwt.prefix(20))...", category: .auth)
                 return tokenResource.jwt
             }
-            print("DEBUG AuthManager: Token resource was nil")
+            AppLogger.warning("Token resource was nil", category: .auth)
             return nil
         } catch {
-            print("DEBUG AuthManager: Failed to get token: \(error)")
+            AppLogger.error("Failed to get token: \(error)", category: .auth)
             return nil
         }
     }
@@ -48,19 +48,19 @@ class AuthManager {
     /// Force refresh token (skip cache) - use after 401 errors
     func getTokenForceRefresh() async -> String? {
         guard let session = Clerk.shared.session else {
-            print("DEBUG AuthManager: No active session for force refresh")
+            AppLogger.debug("No active session for force refresh", category: .auth)
             return nil
         }
         
         do {
             if let tokenResource = try await session.getToken(.init(skipCache: true)) {
-                print("DEBUG AuthManager: Force refreshed token: \(tokenResource.jwt.prefix(20))...")
+                AppLogger.debugSensitive("Force refreshed token: \(tokenResource.jwt.prefix(20))...", category: .auth)
                 return tokenResource.jwt
             }
-            print("DEBUG AuthManager: Force refresh token resource was nil")
+            AppLogger.warning("Force refresh token resource was nil", category: .auth)
             return nil
         } catch {
-            print("DEBUG AuthManager: Failed to force refresh token: \(error)")
+            AppLogger.error("Failed to force refresh token: \(error)", category: .auth)
             return nil
         }
     }
@@ -69,10 +69,10 @@ class AuthManager {
     
     /// Sign out via Clerk and clear Share Extension token
     func signOut() async throws {
-        print("DEBUG AuthManager: Signing out...")
+        AppLogger.info("Signing out...", category: .auth)
         try await Clerk.shared.signOut()
         clearExtensionToken()
-        print("DEBUG AuthManager: Sign out complete")
+        AppLogger.info("Sign out complete", category: .auth)
     }
     
     // MARK: - Share Extension Token Bridge
@@ -81,7 +81,7 @@ class AuthManager {
     /// Call this when app becomes active and after sign-in
     func storeTokenForExtension() async {
         guard let token = await getToken() else {
-            print("DEBUG AuthManager: No token to store for extension")
+            AppLogger.debug("No token to store for extension", category: .auth)
             return
         }
         
@@ -90,7 +90,7 @@ class AuthManager {
         // Token expires in ~60 seconds, set expiry at 50 seconds to be safe
         sharedDefaults?.set(Date().addingTimeInterval(50), forKey: tokenExpiryKey)
         sharedDefaults?.synchronize()
-        print("DEBUG AuthManager: Stored token for Share Extension")
+        AppLogger.debug("Stored token for Share Extension", category: .auth)
     }
     
     /// Clear Share Extension token
@@ -99,6 +99,6 @@ class AuthManager {
         sharedDefaults?.removeObject(forKey: sharedTokenKey)
         sharedDefaults?.removeObject(forKey: tokenExpiryKey)
         sharedDefaults?.synchronize()
-        print("DEBUG AuthManager: Cleared Share Extension token")
+        AppLogger.debug("Cleared Share Extension token", category: .auth)
     }
 }

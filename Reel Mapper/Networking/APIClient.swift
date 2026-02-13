@@ -1,5 +1,7 @@
 import Foundation
 
+// MARK: - API Configuration
+
 struct APIConfig {
     // Toggle this to false when AWS backend is ready
     static let useMockMode = false  // ← Switched to TRUE to use local backend for testing
@@ -25,10 +27,10 @@ class APIClient {
     private let jsonDecoder = JSONDecoder()
     
     func request<T: Decodable>(_ endpoint: Endpoint, body: Encodable? = nil, retryCount: Int = 0, isTokenRefreshRetry: Bool = false) async throws -> T {
-        print("DEBUG API: Starting request to \(endpoint.path), retry: \(retryCount), tokenRefresh: \(isTokenRefreshRetry)")
-        
+        AppLogger.debug("Starting request to \(endpoint.path), retry: \(retryCount), tokenRefresh: \(isTokenRefreshRetry)", category: .network)
+
         guard let url = URL(string: APIConfig.baseURL + endpoint.path) else {
-            print("DEBUG API: Invalid URL - \(APIConfig.baseURL + endpoint.path)")
+            AppLogger.error("Invalid URL - \(APIConfig.baseURL + endpoint.path)", category: .network)
             throw APIError.invalidURL
         }
         
@@ -39,65 +41,65 @@ class APIClient {
         
         // Get token from Clerk via AuthManager (async)
         if let token = await AuthManager.shared.getToken() {
-            print("DEBUG API: Adding Clerk auth token: \(token.prefix(20))...")
+            AppLogger.debugSensitive("Adding Clerk auth token: \(token.prefix(20))...", category: .auth)
             urlRequest.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         } else {
-            print("DEBUG API: No auth token available - user may not be signed in")
+            AppLogger.warning("No auth token available - user may not be signed in", category: .auth)
             throw APIError.unauthorized
         }
         
         if let body = body {
             do {
                 urlRequest.httpBody = try jsonEncoder.encode(body)
-                print("DEBUG API: Request body encoded successfully")
+                AppLogger.debug("Request body encoded successfully", category: .network)
             } catch {
-                print("DEBUG API: Failed to encode request body: \(error)")
+                AppLogger.error("Failed to encode request body: \(error)", category: .network)
                 throw APIError.serializationError
             }
         }
         
         do {
-            print("DEBUG API: Sending request to \(url)")
+            AppLogger.debug("Sending request to \(url)", category: .network)
             let (data, response) = try await session.data(for: urlRequest)
-            
+
             guard let httpResponse = response as? HTTPURLResponse else {
-                print("DEBUG API: Invalid response type")
+                AppLogger.error("Invalid response type", category: .network)
                 throw APIError.unknown(NSError(domain: "Invalid Response", code: 0))
             }
-            
-            print("DEBUG API: Received response with status code: \(httpResponse.statusCode)")
+
+            AppLogger.debug("Received response with status code: \(httpResponse.statusCode)", category: .network)
             
             switch httpResponse.statusCode {
             case 200...299:
                 do {
-                    print("DEBUG API: Attempting to decode response data...")
+                    AppLogger.debug("Attempting to decode response data...", category: .network)
                     let decoded = try jsonDecoder.decode(T.self, from: data)
-                    print("DEBUG API: Successfully decoded response")
-                    
+                    AppLogger.info("Successfully decoded response", category: .network)
+
                     // Store token for Share Extension on successful authenticated requests
                     await AuthManager.shared.storeTokenForExtension()
-                    
+
                     return decoded
                 } catch {
-                    print("DEBUG API: Decoding failed: \(error)")
+                    AppLogger.error("Decoding failed: \(error)", category: .network)
                     if let dataString = String(data: data, encoding: .utf8) {
-                        print("DEBUG API: Response data: \(dataString)")
+                        AppLogger.debug("Response data: \(dataString)", category: .network)
                     }
                     throw APIError.decodingError(error)
                 }
             case 401:
-                print("DEBUG API: Unauthorized (401)")
-                
+                AppLogger.warning("Unauthorized (401)", category: .auth)
+
                 // If this is already a token refresh retry, don't retry again
                 if isTokenRefreshRetry {
-                    print("DEBUG API: Already retried with fresh token, giving up")
+                    AppLogger.warning("Already retried with fresh token, giving up", category: .auth)
                     throw APIError.unauthorized
                 }
-                
+
                 // Try force refreshing the token and retry once (per spec Step 13)
-                print("DEBUG API: Attempting token refresh and retry...")
+                AppLogger.info("Attempting token refresh and retry...", category: .auth)
                 if let freshToken = await AuthManager.shared.getTokenForceRefresh() {
-                    print("DEBUG API: Got fresh token, retrying request...")
+                    AppLogger.info("Got fresh token, retrying request...", category: .auth)
                     var retryRequest = urlRequest
                     retryRequest.setValue("Bearer \(freshToken)", forHTTPHeaderField: "Authorization")
                     
@@ -111,47 +113,47 @@ class APIClient {
                         await AuthManager.shared.storeTokenForExtension()
                         return decoded
                     } else {
-                        print("DEBUG API: Retry also failed with status: \(retryHttpResponse.statusCode)")
+                        AppLogger.error("Retry also failed with status: \(retryHttpResponse.statusCode)", category: .auth)
                         throw APIError.unauthorized
                     }
                 } else {
-                    print("DEBUG API: Could not refresh token")
+                    AppLogger.error("Could not refresh token", category: .auth)
                     throw APIError.unauthorized
                 }
                 
             case 404:
-                print("DEBUG API: Not Found (404)")
+                AppLogger.warning("Not Found (404)", category: .network)
                 throw APIError.notFound
             default:
-                print("DEBUG API: Server error with status code: \(httpResponse.statusCode)")
+                AppLogger.error("Server error with status code: \(httpResponse.statusCode)", category: .network)
                 throw APIError.serverError(statusCode: httpResponse.statusCode)
             }
         } catch let apiError as APIError {
-            print("DEBUG API: Caught APIError: \(apiError)")
+            AppLogger.debug("Caught APIError: \(apiError)", category: .network)
             // Don't retry client errors (4xx) - only retry transient failures
             switch apiError {
             case .unauthorized, .notFound, .invalidURL, .serializationError, .decodingError:
-                print("DEBUG API: Not retrying client error")
+                AppLogger.debug("Not retrying client error", category: .network)
                 throw apiError
             case .serverError, .unknown:
                 // Retry server errors and unknown errors
                 if retryCount < APIConfig.maxRetries {
-                    print("DEBUG API: Retrying... (\(retryCount + 1)/\(APIConfig.maxRetries))")
+                    AppLogger.warning("Retrying... (\(retryCount + 1)/\(APIConfig.maxRetries))", category: .network)
                     try await Task.sleep(nanoseconds: APIConfig.retryDelay * UInt64(retryCount + 1))
                     return try await request(endpoint, body: body, retryCount: retryCount + 1)
                 }
-                print("DEBUG API: Max retries reached")
+                AppLogger.error("Max retries reached", category: .network)
                 throw apiError
             }
         } catch {
-            print("DEBUG API: Network error: \(error)")
+            AppLogger.error("Network error: \(error)", category: .network)
             // Network errors - retry these
             if retryCount < APIConfig.maxRetries {
-                print("DEBUG API: Retrying network error... (\(retryCount + 1)/\(APIConfig.maxRetries))")
+                AppLogger.warning("Retrying network error... (\(retryCount + 1)/\(APIConfig.maxRetries))", category: .network)
                 try await Task.sleep(nanoseconds: APIConfig.retryDelay * UInt64(retryCount + 1))
                 return try await request(endpoint, body: body, retryCount: retryCount + 1)
             }
-            print("DEBUG API: Max retries reached for network error")
+            AppLogger.error("Max retries reached for network error", category: .network)
             throw APIError.unknown(error)
         }
     }

@@ -16,6 +16,7 @@ from sqlmodel import select
 from app.core.security import verify_clerk_token
 from app.db.base import get_session
 from app.models.user import User
+from app.errors import ErrorMessages
 
 import jwt
 import logging
@@ -50,39 +51,39 @@ async def get_current_user(
         HTTPException 401: If token is missing, invalid, or expired
     """
     token = credentials.credentials
-    logger.info(f"DEBUG deps: Received token: {token[:50]}...")
+    logger.debug(f"Received token: {token[:50]}...")
     
     try:
         # Verify the Clerk token
-        logger.info("DEBUG deps: Calling verify_clerk_token...")
+        logger.debug("Calling verify_clerk_token...")
         payload = verify_clerk_token(token)
-        logger.info(f"DEBUG deps: Token verified successfully. Payload: {payload}")
+        logger.debug(f"Token verified successfully. Payload: {payload}")
     except jwt.ExpiredSignatureError:
-        logger.error("DEBUG deps: Token expired")
+        logger.error("Token expired")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token has expired",
+            detail=ErrorMessages.AUTH_TOKEN_EXPIRED,
             headers={"WWW-Authenticate": "Bearer"},
         )
     except jwt.InvalidTokenError as e:
-        logger.error(f"DEBUG deps: Invalid token: {str(e)}")
+        logger.error(f"Invalid token: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid token: {str(e)}",
+            detail=ErrorMessages.AUTH_INVALID_TOKEN,
             headers={"WWW-Authenticate": "Bearer"},
         )
     except ValueError as e:
         # Clerk not configured
-        logger.error(f"DEBUG deps: ValueError (Clerk config issue): {str(e)}")
+        logger.error(f"ValueError (Clerk config issue): {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
         )
     except Exception as e:
-        logger.error(f"DEBUG deps: Unexpected exception: {type(e).__name__}: {str(e)}")
+        logger.error(f"Unexpected exception: {type(e).__name__}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Could not validate credentials: {type(e).__name__}: {str(e)}",
+            detail=ErrorMessages.AUTH_FAILED,
             headers={"WWW-Authenticate": "Bearer"},
         )
     
@@ -91,7 +92,7 @@ async def get_current_user(
     if not clerk_user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token missing subject claim",
+            detail=ErrorMessages.AUTH_MISSING_SUBJECT,
             headers={"WWW-Authenticate": "Bearer"},
         )
     
@@ -115,7 +116,7 @@ async def get_current_user(
         # This shouldn't happen if Clerk is configured correctly
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email not found in token. Please configure custom claims in Clerk dashboard.",
+            detail=ErrorMessages.AUTH_MISSING_EMAIL,
         )
     
     # Check if a user with this email already exists (legacy user migration case)

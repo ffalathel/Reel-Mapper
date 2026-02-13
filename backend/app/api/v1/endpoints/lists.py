@@ -14,6 +14,7 @@ from app.api import deps
 from app import schemas
 from app.models.list import List
 from app.models.save_event import UserRestaurant
+from app.errors import ErrorMessages
 
 router = APIRouter()
 
@@ -38,7 +39,7 @@ async def create_list(
     )
     existing = await db.execute(stmt)
     if existing.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail="List with this name already exists")
+        raise HTTPException(status_code=400, detail=ErrorMessages.VALIDATION_DUPLICATE_NAME)
 
     new_list = List(
         user_id=current_user.id,
@@ -73,7 +74,7 @@ async def get_list_restaurants(
     list_item = result_list.scalar_one_or_none()
 
     if not list_item:
-        raise HTTPException(status_code=404, detail="List not found")
+        raise HTTPException(status_code=404, detail=ErrorMessages.RESOURCE_LIST_NOT_FOUND)
 
     # Fetch all UserRestaurant records for this list
     stmt = (
@@ -102,7 +103,7 @@ async def add_restaurant_to_list(
     stmt_list = select(List).where(List.id == list_id, List.user_id == current_user.id)
     result_list = await db.execute(stmt_list)
     if not result_list.scalar_one_or_none():
-        raise HTTPException(status_code=404, detail="List not found")
+        raise HTTPException(status_code=404, detail=ErrorMessages.RESOURCE_LIST_NOT_FOUND)
 
     # Find the UserRestaurant record
     stmt = select(UserRestaurant).where(UserRestaurant.user_id == current_user.id).where(UserRestaurant.restaurant_id == request.restaurant_id)
@@ -110,7 +111,7 @@ async def add_restaurant_to_list(
     user_rest = result.scalar_one_or_none()
 
     if not user_rest:
-        raise HTTPException(status_code=404, detail="Restaurant not saved by user")
+        raise HTTPException(status_code=404, detail=ErrorMessages.RESOURCE_RESTAURANT_NOT_SAVED)
 
     # Update list_id
     user_rest.list_id = list_id
@@ -120,7 +121,7 @@ async def add_restaurant_to_list(
     return user_rest
 
 
-@router.delete("/{list_id}", status_code=200)
+@router.delete("/{list_id}", status_code=204)
 async def delete_list(
     list_id: UUID,
     db: AsyncSession = Depends(deps.get_db),
@@ -138,7 +139,7 @@ async def delete_list(
     list_item = result.scalar_one_or_none()
 
     if not list_item:
-        raise HTTPException(status_code=404, detail="List not found")
+        raise HTTPException(status_code=404, detail=ErrorMessages.RESOURCE_LIST_NOT_FOUND)
 
     try:
         await db.delete(list_item)
@@ -149,7 +150,7 @@ async def delete_list(
         logger.error(f"Failed to delete list {list_id}: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail="Failed to delete list. Please try again.",
+            detail=ErrorMessages.SERVER_DELETE_FAILED,
         )
 
     return None

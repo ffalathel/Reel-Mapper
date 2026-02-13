@@ -8,7 +8,8 @@ struct RestaurantCardView: View {
     // Generate a seeded placeholder image URL based on restaurant ID
     private var imageURL: URL {
         let seed = abs(restaurant.id.hashValue)
-        return URL(string: "https://picsum.photos/seed/\(seed)/400/300")!
+        return URL(string: "https://picsum.photos/seed/\(seed)/400/300")
+            ?? URL(string: "https://picsum.photos/400/300")!
     }
     
     // Generate a mock rating (seeded by restaurant ID for consistency)

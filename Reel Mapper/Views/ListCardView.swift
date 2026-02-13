@@ -6,7 +6,8 @@ struct ListCardView: View {
     // Generate a seeded placeholder image URL based on list ID
     private var imageURL: URL {
         let seed = abs(list.id.hashValue)
-        return URL(string: "https://picsum.photos/seed/\(seed)/300/300")!
+        return URL(string: "https://picsum.photos/seed/\(seed)/300/300")
+            ?? URL(string: "https://picsum.photos/300/300")!
     }
     
     var body: some View {

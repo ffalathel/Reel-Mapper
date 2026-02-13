@@ -23,12 +23,12 @@ class UserManager: ObservableObject {
         do {
             currentUser = try await APIClient.shared.getCurrentUser()
         } catch APIError.unauthorized {
-            print("UserManager: 401 Unauthorized - User needs to re-authenticate")
+            AppLogger.warning("401 Unauthorized - User needs to re-authenticate", category: .auth)
             self.currentUser = nil
             // Don't call signOut here - let the UI handle it
         } catch {
             self.error = error.localizedDescription
-            print("Failed to fetch user: \(error)")
+            AppLogger.error("Failed to fetch user: \(error)", category: .data)
         }
         
         isLoading = false

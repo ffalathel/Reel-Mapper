@@ -742,32 +742,32 @@ struct AddFolderView: View {
     }
     
     private func createFolder() {
-        print("DEBUG: createFolder called with name: '\(folderName)'")
+        AppLogger.debug("createFolder called with name: '\(folderName)'", category: .data)
         isCreating = true
         
         Task {
             do {
-                print("DEBUG: Calling createList API...")
+                AppLogger.debug("Calling createList API...", category: .data)
                 let response = try await APIClient.shared.createList(name: folderName)
-                print("DEBUG: createList succeeded, got response: \(response)")
+                AppLogger.info("createList succeeded, got response: \(response)", category: .data)
                 
                 // Refresh home data
-                print("DEBUG: Refreshing home data...")
+                AppLogger.debug("Refreshing home data...", category: .data)
                 await HomeViewModel.shared.fetchHome()
                 
                 await MainActor.run {
                     isCreating = false
                     showSuccess = true
-                    print("DEBUG: Showing success alert")
+                    AppLogger.debug("Showing success alert", category: .ui)
                 }
             } catch {
-                print("DEBUG: createList failed with error: \(error)")
-                print("DEBUG: Error localized description: \(error.localizedDescription)")
+                AppLogger.error("createList failed with error: \(error)", category: .data)
+                AppLogger.debug("Error localized description: \(error.localizedDescription)", category: .data)
                 await MainActor.run {
                     isCreating = false
                     errorMessage = "Failed to create folder: \(error.localizedDescription)"
                     showError = true
-                    print("DEBUG: Showing error alert with message: \(errorMessage)")
+                    AppLogger.debug("Showing error alert with message: \(errorMessage)", category: .ui)
                 }
             }
         }

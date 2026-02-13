@@ -92,25 +92,6 @@ struct NotesResponse: Codable {
     let notes: String?
 }
 
-// DEPRECATED: No longer used - favorites are now retrieved from /home endpoint
-// Kept for backward compatibility only
-struct FavoritesListResponse: Codable {
-    let restaurantIds: [UUID]
-
-    enum CodingKeys: String, CodingKey {
-        case restaurantIds = "restaurant_ids"
-    }
-}
-
-// DEPRECATED: No longer used - visited status is now retrieved from /home endpoint
-// Kept for backward compatibility only
-struct VisitedListResponse: Codable {
-    let restaurantIds: [UUID]
-
-    enum CodingKeys: String, CodingKey {
-        case restaurantIds = "restaurant_ids"
-    }
-}
 
 // MARK: - List/Folder DTOs
 
