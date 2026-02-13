@@ -126,7 +126,7 @@ async def delete_list(
     list_id: UUID,
     db: AsyncSession = Depends(deps.get_db),
     current_user: Any = Depends(deps.get_current_user),
-) -> Any:
+) -> None:
     """
     Delete a list.
 

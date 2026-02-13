@@ -15,7 +15,7 @@ async def delete_user_restaurant(
     id: UUID,
     db: AsyncSession = Depends(deps.get_db),
     current_user: Any = Depends(deps.get_current_user),
-):
+) -> None:
     """
     Delete a saved restaurant.
     """
@@ -36,7 +36,7 @@ async def delete_user_restaurant_by_rid(
     restaurant_id: UUID,
     db: AsyncSession = Depends(deps.get_db),
     current_user: Any = Depends(deps.get_current_user),
-):
+) -> None:
     """
     Delete a saved restaurant by restaurant_id.
     """
