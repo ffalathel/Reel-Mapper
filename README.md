@@ -67,13 +67,6 @@ Reel Mapper/
 - Restaurant extraction from Instagram Reels (currently using mock/placeholder logic)
 - Consensus-based extraction pipeline (multi-source: caption parsing, audio transcription, OCR)
 
-### Known Issues
-- Race condition in rapid favorite/visited toggling
-- Polling disabled (manual pull-to-refresh required)
-- No comprehensive test suite yet
-
-See [CLAUDE.md](CLAUDE.md) for full technical documentation.
-
 ## Development
 
 ### Backend
